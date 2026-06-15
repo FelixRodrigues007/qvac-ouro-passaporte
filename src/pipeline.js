@@ -7,11 +7,19 @@ import { verificar } from "./verify.js";
 import { selar } from "./seal.js";
 
 export async function buildPassport(imagePath) {
-  const { text } = await extractText(imagePath);
+  const { text, blocks } = await extractText(imagePath);
   const passport = await structureProvenance(text);
 
+  // Confiança média do OCR: média dos blocks com confidence definido (null se nenhum).
+  const confs = (blocks || [])
+    .map((b) => b.confidence)
+    .filter((c) => typeof c === "number");
+  const confiancaMedia = confs.length
+    ? confs.reduce((s, c) => s + c, 0) / confs.length
+    : null;
+
   // Verificação determinística (regras claras, não IA).
-  const v = verificar(passport);
+  const v = verificar(passport, { confiancaMedia });
   passport.verificacao = {
     status_licenca: v.status,
     alertas: v.alertas,
