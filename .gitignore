@@ -8,6 +8,9 @@ node_modules/
 samples/*
 !samples/README.md
 
+# passaportes gerados (contêm dado pessoal/comercial) — NÃO versionar
+out/
+
 # modelos / cache baixados pela QVAC
 .qvac/
 models/

@@ -10,7 +10,8 @@
   },
   "scripts": {
     "smoke": "node scripts/smoke-llm.js",
-    "passport": "node src/index.js"
+    "passport": "node src/index.js",
+    "verify-seal": "node scripts/verify-seal.js"
   },
   "dependencies": {
     "@qvac/sdk": "latest"

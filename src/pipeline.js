@@ -4,6 +4,7 @@
 import { extractText } from "./ocr.js";
 import { structureProvenance } from "./structure.js";
 import { verificar } from "./verify.js";
+import { selar } from "./seal.js";
 
 export async function buildPassport(imagePath) {
   const { text } = await extractText(imagePath);
@@ -19,5 +20,6 @@ export async function buildPassport(imagePath) {
     fonte: "OCR offline + LLM local (QVAC)",
   };
 
-  return { rawText: text, passport };
+  // Sela o passaporte (SHA-256) só depois de completo, incluindo a verificação.
+  return { rawText: text, passport: selar(passport) };
 }
