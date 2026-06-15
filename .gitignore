@@ -1,0 +1,20 @@
+# dependências
+node_modules/
+
+# variáveis de ambiente
+.env
+
+# documentos reais (sensíveis) — NÃO versionar
+samples/*
+!samples/README.md
+
+# modelos / cache baixados pela QVAC
+.qvac/
+models/
+*.gguf
+*.onnx
+*.bin
+
+# logs e SO
+*.log
+.DS_Store
