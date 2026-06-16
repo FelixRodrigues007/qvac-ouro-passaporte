@@ -74,6 +74,20 @@
 
   @media(max-width:560px){h1{font-size:40px}.wrap{padding:52px 18px 60px}iframe{height:620px}
     .lang{top:12px;right:18px}.lang button{padding:6px 9px}}
+
+  /* One-pager showcase sections (added — reuse the existing :root vars) */
+  .cta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+  .cta-row a{font-family:inherit;font-size:13.5px;font-weight:600;padding:11px 20px;border-radius:9px;
+    border:1px solid var(--line);text-decoration:none;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+  .cta-row a.primary{background:linear-gradient(180deg,var(--gold),var(--gold-deep));color:#1a1306;border-color:var(--gold)}
+  .cta-row a.primary:hover{filter:brightness(1.08)}
+  .cta-row a.ghost{background:transparent;color:#cfe0d8}
+  .cta-row a.ghost:hover{border-color:var(--gold);color:#fff}
+  .shot{display:block;width:100%;max-width:100%;border-radius:12px;border:1px solid var(--line)}
+  .figs{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:18px}
+  .figs figure{margin:0}
+  .cap{font-size:12px;color:var(--ink-soft);text-align:center;margin-top:8px}
+  @media(max-width:560px){.figs{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -96,6 +110,37 @@
       </div>
     </header>
 
+    <div class="cta-row">
+      <a class="primary" href="https://dorahacks.io/buidl/45325" target="_blank" rel="noopener" data-i18n="ctaDora">Ver no DoraHacks</a>
+      <a class="ghost" href="https://github.com/FelixRodrigues007/qvac-ouro-passaporte" target="_blank" rel="noopener" data-i18n="ctaCode">Ver no GitHub</a>
+    </div>
+
+    <section class="card">
+      <h2 data-i18n="probTitle">O problema</h2>
+      <p data-i18n="probBody">A cadeia do ouro passa por lugares sem internet confiável — a lavra, a estrada, o ponto de coleta — e lida com documentos sensíveis que não deveriam sair do dispositivo. IA na nuvem não é opção ali.</p>
+    </section>
+
+    <section class="card">
+      <h2 data-i18n="howTitle">Como funciona</h2>
+      <p data-i18n="howBody">Foto do documento → OCR offline → um LLM local estrutura os dados → verificação por regras → selo SHA-256. Cada camada adiciona confiança verificável.</p>
+      <img src="trust-stack.png" alt="" style="display:block;margin:18px auto 0;max-width:560px;width:100%">
+    </section>
+
+    <section class="card">
+      <h2 data-i18n="seeTitle">Como é um passaporte</h2>
+      <p data-i18n="seeBody">Um documento válido e o mesmo documento adulterado: muda um caractere e o selo quebra.</p>
+      <div class="figs">
+        <figure>
+          <img class="shot" src="cert-valid.jpg" alt="">
+          <figcaption class="cap" data-i18n="capValid">Válido</figcaption>
+        </figure>
+        <figure>
+          <img class="shot" src="cert-adulterado.jpg" alt="">
+          <figcaption class="cap" data-i18n="capTampered">Adulterado — selo quebrado</figcaption>
+        </figure>
+      </div>
+    </section>
+
     <section class="card">
       <h2 data-i18n="h2">Verificar um passaporte</h2>
       <p data-i18n="cardP">Cole o JSON do passaporte ou carregue o arquivo. A verificação recalcula o selo criptográfico <b>aqui no seu navegador</b> — nada é enviado para nenhum servidor.</p>
@@ -115,6 +160,11 @@
     <section class="result" id="resultWrap">
       <h3 data-i18n="certH">Certificado</h3>
       <iframe id="cert" title="Certificado de procedência"></iframe>
+    </section>
+
+    <section class="card">
+      <h2 data-i18n="p2pTitle">Roda em qualquer lugar, sem confiar em ninguém</h2>
+      <p data-i18n="p2pBody">100% offline no dispositivo. E quando o aparelho é fraco, o LLM pesado pode ser delegado a um peer por P2P criptografado (sem servidor, sem nuvem) — enquanto OCR, verificação e selo continuam locais.</p>
     </section>
 
     <footer>
@@ -187,6 +237,16 @@ const I18N = {
       certH: "Certificado",
       foot1: "Verificação 100% no navegador (Web Crypto · SHA-256). Nenhum dado sai do seu dispositivo.",
       foot2: '<a href="https://github.com/FelixRodrigues007/qvac-ouro-passaporte" target="_blank" rel="noopener">Código no GitHub</a> &nbsp;·&nbsp; Construído com <a href="https://qvac.tether.io" target="_blank" rel="noopener">QVAC</a> (Tether) edge AI',
+      ctaDora: "Ver no DoraHacks", ctaCode: "Ver no GitHub",
+      probTitle: "O problema",
+      probBody: "A cadeia do ouro passa por lugares sem internet confiável — a lavra, a estrada, o ponto de coleta — e lida com documentos sensíveis que não deveriam sair do dispositivo. IA na nuvem não é opção ali.",
+      howTitle: "Como funciona",
+      howBody: "Foto do documento → OCR offline → um LLM local estrutura os dados → verificação por regras → selo SHA-256. Cada camada adiciona confiança verificável.",
+      seeTitle: "Como é um passaporte",
+      seeBody: "Um documento válido e o mesmo documento adulterado: muda um caractere e o selo quebra.",
+      capValid: "Válido", capTampered: "Adulterado — selo quebrado",
+      p2pTitle: "Roda em qualquer lugar, sem confiar em ninguém",
+      p2pBody: "100% offline no dispositivo. E quando o aparelho é fraco, o LLM pesado pode ser delegado a um peer por P2P criptografado (sem servidor, sem nuvem) — enquanto OCR, verificação e selo continuam locais.",
     },
     msg: {
       cryptoLabel: "Verificação indisponível aqui",
@@ -233,6 +293,16 @@ const I18N = {
       certH: "Certificate",
       foot1: "100% in-browser verification (Web Crypto · SHA-256). No data leaves your device.",
       foot2: '<a href="https://github.com/FelixRodrigues007/qvac-ouro-passaporte" target="_blank" rel="noopener">Code on GitHub</a> &nbsp;·&nbsp; Built with <a href="https://qvac.tether.io" target="_blank" rel="noopener">QVAC</a> (Tether) edge AI',
+      ctaDora: "View on DoraHacks", ctaCode: "View on GitHub",
+      probTitle: "The problem",
+      probBody: "The gold supply chain runs through places with no reliable internet — the pit, the road, the collection point — and handles sensitive documents that shouldn't leave the device. Cloud AI isn't an option there.",
+      howTitle: "How it works",
+      howBody: "Photo of the document → offline OCR → a local LLM structures the data → rule-based verification → SHA-256 seal. Each layer adds verifiable trust.",
+      seeTitle: "What a passport looks like",
+      seeBody: "A valid document, and the same document tampered with: change one character and the seal breaks.",
+      capValid: "Valid", capTampered: "Tampered — seal broken",
+      p2pTitle: "Runs anywhere, trusts no one",
+      p2pBody: "100% offline on-device. And when the device is weak, the heavy LLM can be delegated to a peer over encrypted P2P (no server, no cloud) — while OCR, verification and the seal stay local.",
     },
     msg: {
       cryptoLabel: "Verification unavailable here",
@@ -279,6 +349,16 @@ const I18N = {
       certH: "Certificado",
       foot1: "Verificación 100% en el navegador (Web Crypto · SHA-256). Ningún dato sale de tu dispositivo.",
       foot2: '<a href="https://github.com/FelixRodrigues007/qvac-ouro-passaporte" target="_blank" rel="noopener">Código en GitHub</a> &nbsp;·&nbsp; Construido con <a href="https://qvac.tether.io" target="_blank" rel="noopener">QVAC</a> (Tether) edge AI',
+      ctaDora: "Ver en DoraHacks", ctaCode: "Ver en GitHub",
+      probTitle: "El problema",
+      probBody: "La cadena del oro pasa por lugares sin internet confiable — la mina, el camino, el punto de acopio — y maneja documentos sensibles que no deberían salir del dispositivo. La IA en la nube no es una opción allí.",
+      howTitle: "Cómo funciona",
+      howBody: "Foto del documento → OCR offline → un LLM local estructura los datos → verificación por reglas → sello SHA-256. Cada capa añade confianza verificable.",
+      seeTitle: "Cómo es un pasaporte",
+      seeBody: "Un documento válido y el mismo documento adulterado: cambia un carácter y el sello se rompe.",
+      capValid: "Válido", capTampered: "Adulterado — sello roto",
+      p2pTitle: "Funciona en cualquier lugar, sin confiar en nadie",
+      p2pBody: "100% offline en el dispositivo. Y cuando el equipo es débil, el LLM pesado puede delegarse a un peer por P2P cifrado (sin servidor, sin nube) — mientras OCR, verificación y sello siguen locales.",
     },
     msg: {
       cryptoLabel: "Verificación no disponible aquí",
