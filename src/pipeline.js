@@ -1,5 +1,5 @@
 /**
- * Pipeline: foto do documento -> OCR (offline) -> LLM -> verificação -> passaporte.
+ * Pipeline: document photo -> OCR (offline) -> LLM -> verification -> passport.
  */
 import { extractText } from "./ocr.js";
 import { structureProvenance } from "./structure.js";
@@ -10,7 +10,7 @@ export async function buildPassport(imagePath) {
   const { text, blocks } = await extractText(imagePath);
   const passport = await structureProvenance(text);
 
-  // Confiança média do OCR: média dos blocks com confidence definido (null se nenhum).
+  // Average OCR confidence: mean of the blocks with a defined confidence (null if none).
   const confs = (blocks || [])
     .map((b) => b.confidence)
     .filter((c) => typeof c === "number");
@@ -18,7 +18,7 @@ export async function buildPassport(imagePath) {
     ? confs.reduce((s, c) => s + c, 0) / confs.length
     : null;
 
-  // Verificação determinística (regras claras, não IA).
+  // Deterministic verification (clear rules, not AI).
   const v = verificar(passport, { confiancaMedia });
   passport.verificacao = {
     status_licenca: v.status,
@@ -28,6 +28,6 @@ export async function buildPassport(imagePath) {
     fonte: "OCR offline + LLM local (QVAC)",
   };
 
-  // Sela o passaporte (SHA-256) só depois de completo, incluindo a verificação.
+  // Seals the passport (SHA-256) only after it is complete, including the verification.
   return { rawText: text, passport: selar(passport) };
 }

@@ -1,13 +1,13 @@
 /**
- * Entrada CLI.
- * Uso: npm run passport -- ./samples/<arquivo>
+ * CLI entry point.
+ * Usage: npm run passport -- ./samples/<file>
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { close } from "@qvac/sdk";
 import { buildPassport } from "./pipeline.js";
 
-/** Transforma o lote num id seguro p/ nome de arquivo (ou null se vazio). */
+/** Turns the batch into a safe id for the file name (or null if empty). */
 function sanitizarId(valor) {
   if (!valor || typeof valor !== "string") return null;
   const limpo = valor
@@ -19,25 +19,25 @@ function sanitizarId(valor) {
 }
 
 const SELOS = {
-  valida: "✅ VÁLIDA",
-  vencida: "⛔ VENCIDA",
-  atencao: "🟡 ATENÇÃO (com pendências)",
-  incompleta: "🟠 INCOMPLETA",
-  nao_identificado: "⬜ NÃO IDENTIFICADA",
+  valida: "✅ VALID",
+  vencida: "⛔ EXPIRED",
+  atencao: "🟡 ATTENTION (pending issues)",
+  incompleta: "🟠 INCOMPLETE",
+  nao_identificado: "⬜ NOT IDENTIFIED",
 };
 
 const imagePath = process.argv[2];
 if (!imagePath) {
-  console.error("Uso: node src/index.js <caminho-da-imagem>");
+  console.error("Usage: node src/index.js <image-path>");
   process.exit(1);
 }
 
 try {
-  console.log("📷 Lendo documento (offline):", imagePath);
+  console.log("📷 Reading document (offline):", imagePath);
   const { rawText, passport } = await buildPassport(imagePath);
 
-  console.log("\n--- Texto bruto (OCR) ---\n" + rawText);
-  console.log("\n--- Passaporte de procedência ---");
+  console.log("\n--- Raw text (OCR) ---\n" + rawText);
+  console.log("\n--- Provenance passport ---");
   console.log(JSON.stringify(passport, null, 2));
 
   const v = passport.verificacao || {};
@@ -47,16 +47,16 @@ try {
   for (const c of (v.checagens || [])) console.log("  " + c);
   console.log("");
 
-  // Salva o passaporte selado em out/<id>.passport.json (dado sensível, fora do git).
+  // Saves the sealed passport to out/<id>.passport.json (sensitive data, outside git).
   const id = sanitizarId(passport?.origem?.lote) || `passaporte-${Date.now()}`;
   mkdirSync("out", { recursive: true });
   const caminho = join("out", `${id}.passport.json`);
   writeFileSync(caminho, JSON.stringify(passport, null, 2), "utf8");
 
-  console.log("🔏 Selo (SHA-256): " + (passport.selo?.hash || "(sem selo)"));
-  console.log("📄 Arquivo: " + caminho + "\n");
+  console.log("🔏 Seal (SHA-256): " + (passport.selo?.hash || "(no seal)"));
+  console.log("📄 File: " + caminho + "\n");
 } catch (error) {
-  console.error("❌ Erro:", error);
+  console.error("❌ Error:", error);
   process.exitCode = 1;
 } finally {
   await close();

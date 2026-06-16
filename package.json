@@ -15,5 +15,8 @@
   },
   "dependencies": {
     "@qvac/sdk": "latest"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.0"
   }
 }

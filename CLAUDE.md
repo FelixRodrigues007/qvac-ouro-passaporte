@@ -1,86 +1,86 @@
-# CLAUDE.md — QVAC Ouro · Passaporte de Procedência
+# CLAUDE.md — QVAC Gold · Provenance Passport
 
-> Contexto para o Claude Code. **Leia antes de gerar ou editar código.**
+> Context for Claude Code. **Read before generating or editing code.**
 
-## O que é este projeto
-Ferramenta **local-first / offline** que gera um "passaporte de procedência" para
-lotes de **ouro**, a partir de documentos reais (licença / PLG da ANM, laudos de
-ensaio, romaneios). Fluxo central:
+## What this project is
+A **local-first / offline** tool that generates a "provenance passport" for
+batches of **gold**, starting from real documents (ANM license / PLG, assay
+reports, packing lists). Core flow:
 
 ```
-foto do documento  ->  OCR (offline)  ->  LLM estrutura  ->  JSON do passaporte
+document photo  ->  OCR (offline)  ->  LLM structures  ->  passport JSON
 ```
 
-Construído sobre o **QVAC SDK** (`@qvac/sdk`), a stack de *edge AI* da Tether: roda
-IA no próprio dispositivo, sem nuvem, com P2P via Holepunch.
+Built on the **QVAC SDK** (`@qvac/sdk`), Tether's *edge AI* stack: it runs
+AI on the device itself, with no cloud, using P2P via Holepunch.
 
-Feito para o **QVAC Hackathon I – Unleash edge AI** (DoraHacks), tema "edge AI".
-**Prazo: ~22/06/2026.** A IA local é o coração do projeto e o critério dos juízes —
-**não substituir por chamadas de nuvem.**
+Made for the **QVAC Hackathon I – Unleash edge AI** (DoraHacks), theme "edge AI".
+**Deadline: ~2026-06-22.** Local AI is the heart of the project and the judges'
+criterion — **do not replace it with cloud calls.**
 
-## Escopo do MVP (foco)
-**DENTRO:**
-- OCR offline de 1 documento de ouro real (`src/ocr.js`).
-- LLM transforma o texto cru no passaporte estruturado (`src/structure.js`).
-- Pipeline `foto -> OCR -> passaporte` rodando por CLI (`src/index.js`).
-- Saída JSON limpa + um caso de demonstração redondo.
+## MVP scope (focus)
+**IN:**
+- Offline OCR of 1 real gold document (`src/ocr.js`).
+- LLM turns the raw text into the structured passport (`src/structure.js`).
+- Pipeline `foto -> OCR -> passaporte` running via CLI (`src/index.js`).
+- Clean JSON output + one polished demo case.
 
-**FORA (vira pitch/visão, NÃO construir agora):**
-- Tokenização / blockchain dos ativos.
-- Captação pública de recursos (questão regulatória — CVM; não implementar).
-- App mobile completo.
+**OUT (becomes pitch/vision, do NOT build now):**
+- Tokenization / blockchain of the assets.
+- Public fundraising (regulatory matter — CVM; do not implement).
+- Full mobile app.
 
-**Stretch (só se sobrar tempo, e conferindo a doc):**
-- RAG sobre documentos da concessão ("essa área está autorizada?").
-- Registro de campo por voz (transcrição offline).
-- Handoff P2P (delegated inference) celular -> PC.
+**Stretch (only if time is left, and after checking the docs):**
+- RAG over concession documents ("is this area authorized?").
+- Voice-based field logging (offline transcription).
+- P2P handoff (delegated inference) phone -> PC.
 
-## Stack e como rodar
+## Stack and how to run
 - **Node.js ≥ 22.17, npm ≥ 10.9**, ESM (`"type": "module"`).
-- Dependência única: `@qvac/sdk`. Instalar com `npm i @qvac/sdk`.
-- Smoke test (IA local funcionando): `npm run smoke`
-- Gerar passaporte de uma imagem: `npm run passport -- ./samples/<arquivo>`
-- **1ª execução baixa o modelo (~1 GB)** e precisa de internet só nessa vez; depois roda offline.
+- Single dependency: `@qvac/sdk`. Install with `npm i @qvac/sdk`.
+- Smoke test (local AI working): `npm run smoke`
+- Generate a passport from an image: `npm run passport -- ./samples/<file>`
+- **First run downloads the model (~1 GB)** and needs internet only that one time; after that it runs offline.
 
-## Estrutura
-- `scripts/smoke-llm.js` — "alô mundo" do LLM local (prova que a máquina roda).
-- `src/config.js` — constantes de modelo e configuração de OCR.
-- `src/ocr.js` — extrai texto da imagem (OCR offline).
-- `src/structure.js` — texto cru -> JSON do passaporte (LLM).
-- `src/pipeline.js` — orquestra foto -> OCR -> passaporte.
-- `src/index.js` — entrada CLI.
-- `docs/qvac-notes.md` — **cheatsheet verificado da API QVAC** (use isto, não invente).
-- `docs/provenance-schema.md` — campos do passaporte.
-- `samples/` — documentos reais (NÃO versionar; estão no `.gitignore` por serem sensíveis).
+## Structure
+- `scripts/smoke-llm.js` — "hello world" of the local LLM (proves the machine runs it).
+- `src/config.js` — model constants and OCR configuration.
+- `src/ocr.js` — extracts text from the image (offline OCR).
+- `src/structure.js` — raw text -> passport JSON (LLM).
+- `src/pipeline.js` — orchestrates photo -> OCR -> passport.
+- `src/index.js` — CLI entry point.
+- `docs/qvac-notes.md` — **verified QVAC API cheatsheet** (use this, don't make things up).
+- `docs/provenance-schema.md` — passport fields.
+- `samples/` — real documents (do NOT version; they are in `.gitignore` because they are sensitive).
 
-## Regras importantes para o agente
-1. **A QVAC é nova; seu conhecimento de treino pode não cobri-la.** Antes de usar
-   qualquer API do `@qvac/sdk`, confira `docs/qvac-notes.md` e, na dúvida, a doc
-   oficial em https://docs.qvac.tether.io. **Nunca invente nomes de função ou
-   constantes de modelo.**
-2. Manter **offline-first**: nada de chamar API de nuvem para a inferência. Toda IA
-   roda via `@qvac/sdk`.
-3. Sempre seguir o ciclo de vida: `loadModel()` -> tarefa -> `unloadModel()` ->
-   `close()` ao final do processo.
-4. O dado é **sensível** (documentos, CPF/CNPJ, coordenadas). Não logar dado pessoal
-   sem necessidade; nada sai do dispositivo.
-5. **Não** implementar tokenização nem captação de recursos — isso é só narrativa do pitch.
-6. Código simples e legível (o autor é iniciante). Comentar o "porquê". Funções
-   pequenas e fáceis de testar. Mensagens e comentários em português.
+## Important rules for the agent
+1. **QVAC is new; your training knowledge may not cover it.** Before using
+   any `@qvac/sdk` API, check `docs/qvac-notes.md` and, when in doubt, the
+   official docs at https://docs.qvac.tether.io. **Never invent function names or
+   model constants.**
+2. Keep it **offline-first**: no calling cloud APIs for inference. All AI
+   runs via `@qvac/sdk`.
+3. Always follow the lifecycle: `loadModel()` -> task -> `unloadModel()` ->
+   `close()` at the end of the process.
+4. The data is **sensitive** (documents, CPF/CNPJ, coordinates). Do not log personal
+   data unnecessarily; nothing leaves the device.
+5. Do **not** implement tokenization or fundraising — that is only pitch narrative.
+6. Simple, readable code (the author is a beginner). Comment the "why". Small,
+   easy-to-test functions. Messages and comments in English.
 
-## Princípios do produto
-- **Por que offline importa aqui:** área de extração remota, sem sinal; dado
-  comercial e regulatório sensível. Por isso *edge AI*, não nuvem.
-- O passaporte é o **lastro de procedência** que daria credibilidade a qualquer
-  tokenização futura. Esse é o vínculo entre o que construímos e a visão do pitch.
+## Product principles
+- **Why offline matters here:** remote extraction areas, no signal; commercially
+  and regulatorily sensitive data. That's why *edge AI*, not cloud.
+- The passport is the **provenance backing** that would give credibility to any
+  future tokenization. That is the link between what we build and the pitch's vision.
 
 ## Build in public
-Opt-in feito no hackathon. Registrar progresso (commits claros, notas, prints).
-Boa narrativa: "aprendi a rodar IA offline e montar um verificador de procedência
-de ouro em uma semana".
+Opt-in done at the hackathon. Record progress (clear commits, notes, screenshots).
+Good narrative: "I learned to run AI offline and build a gold provenance
+verifier in a week".
 
-## Glossário de domínio
-- **ANM** — Agência Nacional de Mineração (autoriza pesquisa e lavra).
-- **PLG** — Permissão de Lavra Garimpeira (regime do ouro de garimpo).
-- **Teor** — concentração do metal no minério.
-- **Romaneio** — documento que lista itens/quantidades de um lote ou carga.
+## Domain glossary
+- **ANM** — National Mining Agency (authorizes prospecting and mining).
+- **PLG** — Garimpeira Mining Permit (the regime for artisanal/garimpo gold).
+- **Teor** — grade (concentration of the metal in the ore).
+- **Romaneio** — packing list (a document listing items/quantities of a batch or shipment).

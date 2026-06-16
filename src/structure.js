@@ -1,23 +1,23 @@
 /**
- * Etapa do LLM: transforma o texto cru do OCR no "passaporte de procedência" (JSON).
- * Roda local via QVAC. Veja docs/provenance-schema.md para os campos.
+ * LLM step: turns the raw OCR text into the "provenance passport" (JSON).
+ * Runs locally via QVAC. See docs/provenance-schema.md for the fields.
  */
 import { loadModel, completion, unloadModel } from "@qvac/sdk";
 import { LLM_MODEL } from "./config.js";
 
 const SYSTEM = `/no_think
-Você extrai dados de documentos minerários brasileiros (licença/PLG da ANM, laudos
-de ensaio, romaneios) sobre OURO. Responda APENAS com um objeto JSON válido, sem
-texto antes ou depois, sem comentários. Use null quando não encontrar o dado.
-NÃO invente valores.`;
+You extract data from Brazilian mining documents (ANM license/PLG, assay
+reports, packing lists) about GOLD. Respond ONLY with a valid JSON object, with no
+text before or after, and no comments. Use null when you cannot find the data.
+DO NOT make up values.`;
 
 function buildPrompt(rawText) {
-  return `Texto extraído do documento (via OCR, pode ter ruído):
+  return `Text extracted from the document (via OCR, may contain noise):
 """
 ${rawText}
 """
 
-Devolva SOMENTE este JSON preenchido (mesma estrutura):
+Return ONLY this filled-in JSON (same structure):
 {
   "documento": { "tipo": null, "numero_processo_anm": null, "data_emissao": null, "validade": null },
   "titular": { "nome": null, "cpf_cnpj": null },
@@ -27,10 +27,10 @@ Devolva SOMENTE este JSON preenchido (mesma estrutura):
   "verificacao": { "status_licenca": "nao_identificado", "observacoes": null }
 }
 
-Regras:
-- "tipo": um de "licenca_anm", "plg", "laudo_ensaio", "romaneio" ou "outro".
-- "regime": um de "concessao_lavra", "plg", "autorizacao_pesquisa" ou null.
-- Datas e números como aparecem no documento (ex.: "12,4 g/t").`;
+Rules:
+- "tipo": one of "licenca_anm", "plg", "laudo_ensaio", "romaneio" or "outro".
+- "regime": one of "concessao_lavra", "plg", "autorizacao_pesquisa" or null.
+- Dates and numbers as they appear in the document (e.g.: "12,4 g/t").`;
 }
 
 export async function structureProvenance(rawText) {
@@ -56,7 +56,7 @@ export async function structureProvenance(rawText) {
   }
 }
 
-/** Extrai o JSON, removendo raciocínio (<think>) e cercas de código. */
+/** Extracts the JSON, stripping reasoning (<think>) and code fences. */
 function safeParseJson(text) {
   let t = text
     .replace(/<think>[\s\S]*?<\/think>/gi, "")
@@ -64,10 +64,10 @@ function safeParseJson(text) {
     .replace(/```/g, "");
   const start = t.indexOf("{");
   const end = t.lastIndexOf("}");
-  if (start === -1 || end === -1) return { _erro: "sem JSON", _bruto: text };
+  if (start === -1 || end === -1) return { _erro: "no JSON", _bruto: text };
   try {
     return JSON.parse(t.slice(start, end + 1));
   } catch {
-    return { _erro: "JSON inválido", _bruto: text };
+    return { _erro: "invalid JSON", _bruto: text };
   }
 }

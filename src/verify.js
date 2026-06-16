@@ -1,10 +1,10 @@
 /**
- * Verificação determinística do passaporte (regras claras, não IA).
- * A IA extrai os dados; aqui o código julga se a documentação parece
- * válida, vencida ou incompleta — de forma auditável e explicável.
+ * Deterministic verification of the passport (clear rules, not AI).
+ * The AI extracts the data; here the code judges whether the documentation looks
+ * valid, expired or incomplete — in an auditable and explainable way.
  */
 
-/** Converte data "DD/MM/AAAA" (ou variações) em Date, ou null. */
+/** Converts a date "DD/MM/YYYY" (or variations) into a Date, or null. */
 function parseDataBR(s) {
   if (!s || typeof s !== "string") return null;
   const m = s.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
@@ -21,17 +21,17 @@ function temValor(v) {
   return v !== null && v !== undefined && String(v).trim() !== "";
 }
 
-// Validação de CNPJ/CPF pelo dígito verificador (auditável, sem depender de IA).
+// CNPJ/CPF validation via check digit (auditable, without relying on AI).
 function soDigitos(s){return String(s||'').replace(/\D/g,'');}
 function validarCNPJ(v){const c=soDigitos(v);if(c.length!==14||/^(\d)\1{13}$/.test(c))return false;const dv=(b,p)=>{const r=b.reduce((s,n,i)=>s+n*p[i],0)%11;return r<2?0:11-r;};const n=c.split('').map(Number);return dv(n.slice(0,12),[5,4,3,2,9,8,7,6,5,4,3,2])===n[12]&&dv(n.slice(0,13),[6,5,4,3,2,9,8,7,6,5,4,3,2])===n[13];}
 function validarCPF(v){const c=soDigitos(v);if(c.length!==11||/^(\d)\1{10}$/.test(c))return false;const dv=q=>{let s=0;for(let i=0;i<q;i++)s+=Number(c[i])*(q+1-i);const r=(s*10)%11;return r===10?0:r;};return dv(9)===Number(c[9])&&dv(10)===Number(c[10]);}
 
 /**
- * Recebe o passaporte com os dados extraídos e devolve a verificação.
- * @param {object} p  passaporte
+ * Receives the passport with the extracted data and returns the verification.
+ * @param {object} p  passport
  * @param {object} opcoes
- * @param {Date}   [opcoes.hoje]           data de referência (padrão: agora)
- * @param {number|null} [opcoes.confiancaMedia] confiança média do OCR (0..1) ou null
+ * @param {Date}   [opcoes.hoje]           reference date (default: now)
+ * @param {number|null} [opcoes.confiancaMedia] average OCR confidence (0..1) or null
  * @returns {{ status: string, alertas: number, checagens: string[] }}
  */
 export function verificar(p, opcoes = {}) {
@@ -39,48 +39,48 @@ export function verificar(p, opcoes = {}) {
   const checagens = [];
   let alertas = 0;
 
-  // 1) Validade
+  // 1) Expiry date
   const validadeStr = p?.documento?.validade;
   const validade = parseDataBR(validadeStr);
   let vencida = null;
   if (validade) {
     vencida = validade < hoje;
     if (vencida) {
-      checagens.push(`⚠️ Documento vencido (validade ${validadeStr})`);
+      checagens.push(`⚠️ Document expired (valid until ${validadeStr})`);
       alertas++;
     } else {
-      checagens.push(`✓ Documento vigente (validade ${validadeStr})`);
+      checagens.push(`✓ Document valid (expires ${validadeStr})`);
     }
   } else {
-    checagens.push("⚠️ Validade não identificada");
+    checagens.push("⚠️ Expiry date not identified");
     alertas++;
   }
 
-  // 2) Processo ANM
+  // 2) ANM process
   if (temValor(p?.documento?.numero_processo_anm)) {
-    checagens.push(`✓ Processo ANM informado (${p.documento.numero_processo_anm})`);
+    checagens.push(`✓ ANM process present (${p.documento.numero_processo_anm})`);
   } else {
-    checagens.push("⚠️ Sem número de processo ANM");
+    checagens.push("⚠️ No ANM process number");
     alertas++;
   }
 
-  // 3) Regime de extração
+  // 3) Mining regime
   if (temValor(p?.area?.regime)) {
-    checagens.push(`✓ Regime informado (${p.area.regime})`);
+    checagens.push(`✓ Mining regime present (${p.area.regime})`);
   } else {
-    checagens.push("⚠️ Regime de extração não identificado");
+    checagens.push("⚠️ Mining regime not identified");
     alertas++;
   }
 
-  // 4) Titular
+  // 4) Holder
   if (temValor(p?.titular?.nome)) {
-    checagens.push("✓ Titular informado");
+    checagens.push("✓ Holder present");
   } else {
-    checagens.push("⚠️ Titular não identificado");
+    checagens.push("⚠️ Holder not identified");
     alertas++;
   }
 
-  // 5) CNPJ/CPF do titular — valida pelo dígito verificador
+  // 5) Holder's CNPJ/CPF — validate via check digit
   const docTitular = p?.titular?.cpf_cnpj;
   if (temValor(docTitular)) {
     const digitos = soDigitos(docTitular);
@@ -89,32 +89,32 @@ export function verificar(p, opcoes = {}) {
       : digitos.length === 11 ? validarCPF(docTitular)
       : false;
     if (valido) {
-      checagens.push("✓ CNPJ/CPF válido");
+      checagens.push("✓ Tax ID (CNPJ/CPF) valid");
     } else {
-      checagens.push("⚠️ CNPJ/CPF com dígito verificador inválido");
+      checagens.push("⚠️ Tax ID (CNPJ/CPF) failed check-digit validation");
       alertas++;
     }
   } else {
-    checagens.push("⚠️ CNPJ/CPF não informado");
+    checagens.push("⚠️ Tax ID (CNPJ/CPF) not provided");
     alertas++;
   }
 
-  // 6) Coerência de datas — emissão não pode ser posterior à validade
+  // 6) Date consistency — issue date cannot be after the expiry date
   const emissao = parseDataBR(p?.documento?.data_emissao);
   if (emissao && validade && emissao > validade) {
-    checagens.push("⚠️ Data de emissão posterior à validade");
+    checagens.push("⚠️ Issue date is after the expiry date");
     alertas++;
   }
 
-  // 7) Confiança do OCR — leitura ruim merece revisão manual
+  // 7) OCR confidence — a poor reading deserves manual review
   if (confiancaMedia != null && confiancaMedia < 0.7) {
     checagens.push(
-      `⚠️ Leitura OCR com baixa confiança (média ${confiancaMedia.toFixed(2)}) — revisar campos`
+      `⚠️ Low-confidence OCR reading (average ${confiancaMedia.toFixed(2)}) — review fields`
     );
     alertas++;
   }
 
-  // Status final
+  // Final status
   let status;
   if (vencida === true) status = "vencida";
   else if (alertas === 0) status = "valida";

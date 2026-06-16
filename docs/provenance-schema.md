@@ -1,7 +1,7 @@
-# Passaporte de procedência — esquema (rascunho)
+# Provenance passport — schema (draft)
 
-Estrutura-alvo que o LLM deve preencher a partir do texto do OCR. Campos não
-encontrados ficam como `null` (não inventar). Tudo permanece no dispositivo.
+The target structure the LLM should fill in from the OCR text. Fields that aren't
+found stay as `null` (don't make things up). Everything stays on the device.
 
 ```json
 {
@@ -40,7 +40,7 @@ encontrados ficam como `null` (não inventar). Tudo permanece no dispositivo.
 }
 ```
 
-Notas:
-- `status_licenca` é uma heurística baseada no texto — deixar claro na demo que é
-  apoio à decisão, não validação oficial junto à ANM.
-- Evoluir os campos conforme os documentos reais que o time conseguir.
+Notes:
+- `status_licenca` is a heuristic based on the text — make it clear in the demo that it is
+  decision support, not official validation with the ANM.
+- Evolve the fields as the team gets hold of real documents.

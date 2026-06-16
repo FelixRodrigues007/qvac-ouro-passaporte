@@ -1,24 +1,24 @@
 /**
- * Configuração central de modelos.
- * As constantes vêm do registro de modelos da QVAC (download/cache automáticos).
- * Veja docs/qvac-notes.md.
+ * Central model configuration.
+ * The constants come from the QVAC model registry (automatic download/cache).
+ * See docs/qvac-notes.md.
  */
 import { QWEN3_4B_INST_Q4_K_M, OCR_LATIN_RECOGNIZER_1 } from "@qvac/sdk";
 
-// Modelo de linguagem usado para estruturar o texto do OCR.
-// Para mais qualidade, dá para trocar por um modelo maior do registro (mais lento).
+// Language model used to structure the OCR text.
+// For higher quality, you can swap it for a larger model from the registry (slower).
 export const LLM_MODEL = QWEN3_4B_INST_Q4_K_M;
 
-// Modelo de OCR (script latino — lê português).
+// OCR model (Latin script — reads Portuguese).
 export const OCR_MODEL = OCR_LATIN_RECOGNIZER_1;
 
-// Config do OCR. Ajustar conforme os documentos reais.
+// OCR config. Adjust according to the real documents.
 export const OCR_CONFIG = {
-  langList: ["en"], // recognizer latino lê PT; testar ["pt"] e conferir doc
+  langList: ["en"], // Latin recognizer reads PT; test ["pt"] and check the docs
   useGPU: true,
   timeout: 30000,
   magRatio: 1.5,
-  defaultRotationAngles: [90, 180, 270], // tenta corrigir documentos rotacionados
+  defaultRotationAngles: [90, 180, 270], // tries to fix rotated documents
   contrastRetry: false,
   lowConfidenceThreshold: 0.5,
   recognizerBatchSize: 1,

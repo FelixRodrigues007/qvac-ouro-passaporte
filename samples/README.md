@@ -1,17 +1,16 @@
 # samples/
 
-Coloque aqui os documentos reais de ouro para testar (licença/PLG da ANM, laudos,
-romaneios) — em imagem: `.jpg`, `.png`, `.bmp`.
+Place the real gold documents here for testing (ANM license/PLG, assay reports,
+packing lists) — as an image: `.jpg`, `.png`, `.bmp`.
 
-**Estes arquivos NÃO são versionados** (estão no `.gitignore`), porque contêm dados
-sensíveis (CPF/CNPJ, coordenadas, etc.). Cada pessoa do time coloca os seus localmente.
+**These files are NOT versioned** (they are in `.gitignore`), because they contain
+sensitive data (CPF/CNPJ, coordinates, etc.). Each team member places their own locally.
 
-Exemplo de uso:
+Example usage:
 
 ```bash
 npm run passport -- ./samples/licenca-exemplo.jpg
 ```
 
-Para um primeiro teste sem documento real, dá para baixar a imagem de exemplo do OCR
-da QVAC:
+For a first test without a real document, you can download QVAC's OCR example image:
 https://github.com/tetherto/qvac/blob/main/packages/sdk/examples/image/basic_test.bmp

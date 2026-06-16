@@ -1,23 +1,29 @@
-# dependências
+# dependencies
 node_modules/
 
-# variáveis de ambiente
+# environment variables
 .env
 
-# documentos reais (sensíveis) — NÃO versionar
+# real documents (sensitive) — DO NOT version
 samples/*
 !samples/README.md
 
-# passaportes gerados (contêm dado pessoal/comercial) — NÃO versionar
+# generated passports (contain personal/commercial data) — DO NOT version
 out/
 
-# modelos / cache baixados pela QVAC
+# demo video assets (large binaries + embedded document) — DO NOT version
+video/
+
+# models / cache downloaded by QVAC
 .qvac/
 models/
 *.gguf
 *.onnx
 *.bin
 
-# logs e SO
+# logs and OS
 *.log
 .DS_Store
+
+# API key (ElevenLabs) — NEVER version
+.eleven_key

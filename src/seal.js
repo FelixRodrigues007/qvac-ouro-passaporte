@@ -1,15 +1,15 @@
 /**
- * Selo criptográfico (anti-fraude) — Node puro, sem QVAC.
+ * Cryptographic seal (anti-fraud) — pure Node, no QVAC.
  *
- * Ideia: gerar um SHA-256 de uma serialização CANÔNICA do passaporte. Como a
- * serialização ordena as chaves, reordenar campos não muda o hash — só uma
- * alteração real de conteúdo (ex.: mexer no teor) quebra o selo.
+ * Idea: generate a SHA-256 of a CANONICAL serialization of the passport. Since the
+ * serialization sorts the keys, reordering fields does not change the hash — only a
+ * real change in content (e.g.: tampering with the grade) breaks the seal.
  */
 import { createHash } from "node:crypto";
 
 /**
- * Forma canônica do valor: objetos com chaves ordenadas recursivamente,
- * arrays mapeados, e o campo "selo" sempre removido (ele não entra no hash).
+ * Canonical form of the value: objects with keys sorted recursively,
+ * arrays mapped, and the "selo" field always removed (it does not enter the hash).
  */
 function canonico(valor) {
   if (Array.isArray(valor)) {
@@ -18,7 +18,7 @@ function canonico(valor) {
   if (valor && typeof valor === "object") {
     const saida = {};
     for (const chave of Object.keys(valor).sort()) {
-      if (chave === "selo") continue; // o selo nunca entra no próprio hash
+      if (chave === "selo") continue; // the seal never enters its own hash
       saida[chave] = canonico(valor[chave]);
     }
     return saida;
@@ -26,19 +26,19 @@ function canonico(valor) {
   return valor;
 }
 
-/** SHA-256 da serialização canônica (sem espaços, sem o campo "selo"). */
+/** SHA-256 of the canonical serialization (no whitespace, without the "selo" field). */
 function hashCanonico(passaporte) {
   const texto = JSON.stringify(canonico(passaporte));
   return createHash("sha256").update(texto, "utf8").digest("hex");
 }
 
 /**
- * Devolve uma CÓPIA do passaporte com o campo "selo" adicionado.
+ * Returns a COPY of the passport with the "selo" field added.
  * @param {object} passaporte
- * @returns {object} cópia selada
+ * @returns {object} sealed copy
  */
 export function selar(passaporte) {
-  const copia = structuredClone(passaporte); // não muta o original
+  const copia = structuredClone(passaporte); // does not mutate the original
   copia.selo = {
     algoritmo: "SHA-256",
     hash: hashCanonico(copia),
@@ -48,7 +48,7 @@ export function selar(passaporte) {
 }
 
 /**
- * Recalcula o hash e compara com o selo gravado.
+ * Recomputes the hash and compares it with the recorded seal.
  * @param {object} passaporte
  * @returns {{ integro: boolean, esperado: string|null, atual: string }}
  */

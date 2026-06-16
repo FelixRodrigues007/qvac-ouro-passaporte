@@ -1,12 +1,12 @@
 /**
- * Etapa de OCR: extrai texto de uma imagem de documento, 100% offline.
- * Veja docs/qvac-notes.md (seção OCR).
+ * OCR step: extracts text from a document image, 100% offline.
+ * See docs/qvac-notes.md (OCR section).
  */
 import { loadModel, ocr, unloadModel } from "@qvac/sdk";
 import { OCR_MODEL, OCR_CONFIG } from "./config.js";
 
 /**
- * @param {string} imagePath  caminho do arquivo de imagem (jpg, png, bmp...)
+ * @param {string} imagePath  path to the image file (jpg, png, bmp...)
  * @returns {Promise<{ text: string, blocks: Array<{text: string, bbox?: number[], confidence?: number}> }>}
  */
 export async function extractText(imagePath) {
@@ -26,7 +26,7 @@ export async function extractText(imagePath) {
     const text = result.map((b) => b.text).join("\n");
     return { text, blocks: result };
   } finally {
-    // libera o modelo mesmo se der erro
+    // releases the model even if an error occurs
     await unloadModel({ modelId, clearStorage: false });
   }
 }

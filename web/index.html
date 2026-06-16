@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AuPass — Verificador de Procedência de Ouro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#12241d;--ink-soft:#9fb4aa;--paper:#f6f2e8;--gold:#d8b24a;--gold-deep:#b8891f;
+    --green:#3fae7e;--red:#e2746f;--line:rgba(216,178,74,.22);}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:#eaf2ee;
+    background:radial-gradient(130% 90% at 50% -20%,#1c352b 0%,#12241d 55%,#0a1510 100%);
+    min-height:100vh;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:56px 24px 80px;position:relative}
+
+  /* Seletor de idioma (toggle com bandeirinha) */
+  .lang{position:absolute;top:16px;right:24px;display:flex;gap:3px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:100px;padding:4px;z-index:5}
+  .lang button{display:flex;align-items:center;gap:6px;border:none;background:transparent;cursor:pointer;
+    color:#cfe0d8;font-family:inherit;font-weight:600;font-size:12px;letter-spacing:.04em;
+    padding:6px 11px;border-radius:100px;transition:.15s}
+  .lang button .fl{font-size:15px;line-height:1}
+  .lang button:hover{color:#fff}
+  .lang button.active{background:linear-gradient(180deg,var(--gold),var(--gold-deep));color:#1a1306}
+
+  .badge{display:inline-block;font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--gold);border:1px solid var(--line);padding:6px 14px;border-radius:100px}
+  h1{font-family:"IBM Plex Serif",serif;font-size:54px;font-weight:600;margin:20px 0 6px;
+    letter-spacing:-.02em;color:#fff}
+  h1 .au{color:var(--gold)}
+  .lede{font-size:18px;color:#cfe0d8;max-width:620px}
+  .lede b{color:#fff;font-weight:600}
+  .how{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px;font-size:12.5px;color:var(--ink-soft)}
+  .how span{background:rgba(255,255,255,.04);border:1px solid var(--line);
+    padding:7px 12px;border-radius:8px}
+
+  .card{background:rgba(246,242,232,.04);border:1px solid var(--line);border-radius:14px;
+    padding:28px;margin-top:40px;backdrop-filter:blur(4px)}
+  h2{font-family:"IBM Plex Serif",serif;font-size:22px;font-weight:600;color:#fff;margin-bottom:6px}
+  .card p{font-size:14px;color:#bcd0c7}
+  textarea{width:100%;min-height:130px;margin-top:16px;background:#0c1813;color:#dfeee7;
+    border:1px solid var(--line);border-radius:10px;padding:14px;font-family:"IBM Plex Mono",monospace;
+    font-size:12.5px;resize:vertical}
+  textarea:focus{outline:none;border-color:var(--gold)}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  button{font-family:inherit;font-size:13.5px;font-weight:600;padding:11px 20px;border-radius:9px;
+    cursor:pointer;border:1px solid var(--line);transition:.15s}
+  .ghost{background:transparent;color:#cfe0d8}
+  .ghost:hover{border-color:var(--gold);color:#fff}
+  .primary{background:linear-gradient(180deg,var(--gold),var(--gold-deep));color:#1a1306;border-color:var(--gold)}
+  .primary:hover{filter:brightness(1.08)}
+
+  .status{margin-top:18px;font-family:"IBM Plex Mono",monospace;font-size:14px;display:none}
+  .status.show{display:block}
+  .status .pill{display:inline-flex;align-items:center;gap:9px;font-weight:600;font-size:16px;
+    padding:10px 18px;border-radius:10px;letter-spacing:.02em}
+  .status.ok .pill{background:rgba(63,174,126,.14);color:var(--green);border:1px solid rgba(63,174,126,.4)}
+  .status.bad .pill{background:rgba(226,116,111,.14);color:var(--red);border:1px solid rgba(226,116,111,.45)}
+  .status .detail{font-size:11.5px;color:var(--ink-soft);margin-top:10px;word-break:break-all;line-height:1.6}
+
+  .result{margin-top:28px;display:none}
+  .result.show{display:block}
+  .result h3{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:12px}
+  iframe{width:100%;height:760px;border:1px solid var(--line);border-radius:12px;background:#0a1510}
+
+  footer{margin-top:48px;padding-top:24px;border-top:1px solid var(--line);
+    font-size:12.5px;color:var(--ink-soft)}
+  footer a{color:var(--gold);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  footer p{margin-top:6px}
+
+  @media(max-width:560px){h1{font-size:40px}.wrap{padding:52px 18px 60px}iframe{height:620px}
+    .lang{top:12px;right:18px}.lang button{padding:6px 9px}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="lang" role="group" aria-label="Idioma / Language / Idioma">
+      <button data-lang="pt" aria-label="Português"><span class="fl">🇧🇷</span>PT</button>
+      <button data-lang="en" aria-label="English"><span class="fl">🇺🇸</span>EN</button>
+      <button data-lang="es" aria-label="Español"><span class="fl">🇪🇸</span>ES</button>
+    </div>
+
+    <header>
+      <span class="badge">QVAC edge AI · Proof of Provenance</span>
+      <h1><span class="au">Au</span>Pass</h1>
+      <p class="lede" data-i18n="lede">Passaporte de procedência de ouro, gerado <b>offline no dispositivo</b> e <b>verificável publicamente</b> por qualquer pessoa — sem servidor, sem precisar confiar em ninguém.</p>
+      <div class="how">
+        <span data-i18n="how0">📷 Documento</span>
+        <span data-i18n="how1">🔒 Gerado offline (OCR + IA local)</span>
+        <span data-i18n="how2">🔏 Selado (SHA-256)</span>
+        <span data-i18n="how3">✅ Verificado no seu navegador</span>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2 data-i18n="h2">Verificar um passaporte</h2>
+      <p data-i18n="cardP">Cole o JSON do passaporte ou carregue o arquivo. A verificação recalcula o selo criptográfico <b>aqui no seu navegador</b> — nada é enviado para nenhum servidor.</p>
+      <textarea id="input" placeholder='Cole aqui o conteúdo do arquivo .passport.json'></textarea>
+      <div class="actions">
+        <input type="file" id="file" accept=".json,application/json" hidden>
+        <button class="ghost" id="btnFile" data-i18n="btnFile">Carregar arquivo…</button>
+        <button class="ghost" id="btnSample" data-i18n="btnSample">Carregar exemplo</button>
+        <button class="primary" id="btnVerify" data-i18n="btnVerify">Verificar selo</button>
+      </div>
+      <div class="status" id="status">
+        <span class="pill" id="pill"></span>
+        <div class="detail" id="detail"></div>
+      </div>
+    </section>
+
+    <section class="result" id="resultWrap">
+      <h3 data-i18n="certH">Certificado</h3>
+      <iframe id="cert" title="Certificado de procedência"></iframe>
+    </section>
+
+    <footer>
+      <p data-i18n="foot1">Verificação 100% no navegador (Web Crypto · SHA-256). Nenhum dado sai do seu dispositivo.</p>
+      <p data-i18n="foot2"><a href="https://github.com/FelixRodrigues007/qvac-ouro-passaporte" target="_blank" rel="noopener">Código no GitHub</a> &nbsp;·&nbsp; Construído com <a href="https://qvac.tether.io" target="_blank" rel="noopener">QVAC</a> (Tether) edge AI</p>
+    </footer>
+  </div>
+
+  <script type="application/json" id="sample">{
+  "documento": {
+    "tipo": "laudo_ensaio",
+    "numero_processo_anm": "800.999/2025",
+    "data_emissao": "02/06/2026",
+    "validade": "02/06/2027"
+  },
+  "titular": {
+    "nome": "Mineradora Vale do Ouro LTDA",
+    "cpf_cnpj": "11.222.333/0001-81"
+  },
+  "area": {
+    "municipio": "Tibagi",
+    "uf": "PR",
+    "coordenadas": "24°30′S 50°24′W",
+    "regime": "plg"
+  },
+  "minerio": {
+    "substancia": "ouro",
+    "teor": "12,4 g/t",
+    "massa": "850",
+    "unidade": "g"
+  },
+  "origem": {
+    "lote": "LT-2025-047",
+    "ponto_extracao": null
+  },
+  "verificacao": {
+    "status_licenca": "valida",
+    "alertas": 0,
+    "checagens": [
+      "✓ Documento vigente (validade 02/06/2027)",
+      "✓ Processo ANM informado (800.999/2025)",
+      "✓ Regime informado (plg)",
+      "✓ Titular informado",
+      "✓ CNPJ/CPF válido"
+    ],
+    "fonte": "OCR offline + LLM local (QVAC)"
+  },
+  "selo": {
+    "algoritmo": "SHA-256",
+    "hash": "a979f2fb0b489a049c84e3de46fe811937afa051190a959e42a04ebc630328b9",
+    "gerado_em": "2026-06-15T22:15:15.942Z"
+  }
+}</script>
+  <script>
+/* ============================================================
+ * i18n — page and certificate texts in PT / EN / ES.
+ * The checks inside the passport are DATA (they come from the document),
+ * so they are not translated — only the surrounding labels/structure.
+ * ============================================================ */
+const I18N = {
+  pt: {
+    htmlLang: "pt-BR", dateLoc: "pt-BR",
+    page: {
+      lede: 'Passaporte de procedência de ouro, gerado <b>offline no dispositivo</b> e <b>verificável publicamente</b> por qualquer pessoa — sem servidor, sem precisar confiar em ninguém.',
+      how0: "📷 Documento", how1: "🔒 Gerado offline (OCR + IA local)", how2: "🔏 Selado (SHA-256)", how3: "✅ Verificado no seu navegador",
+      h2: "Verificar um passaporte",
+      cardP: 'Cole o JSON do passaporte ou carregue o arquivo. A verificação recalcula o selo criptográfico <b>aqui no seu navegador</b> — nada é enviado para nenhum servidor.',
+      inputPh: "Cole aqui o conteúdo do arquivo .passport.json",
+      btnFile: "Carregar arquivo…", btnSample: "Carregar exemplo", btnVerify: "Verificar selo",
+      certH: "Certificado",
+      foot1: "Verificação 100% no navegador (Web Crypto · SHA-256). Nenhum dado sai do seu dispositivo.",
+      foot2: '<a href="https://github.com/FelixRodrigues007/qvac-ouro-passaporte" target="_blank" rel="noopener">Código no GitHub</a> &nbsp;·&nbsp; Construído com <a href="https://qvac.tether.io" target="_blank" rel="noopener">QVAC</a> (Tether) edge AI',
+    },
+    msg: {
+      cryptoLabel: "Verificação indisponível aqui",
+      cryptoDetail: "Abra esta página por HTTPS (ex.: no Vercel) — o navegador só libera o cálculo do selo em contexto seguro.",
+      jsonLabel: "JSON inválido",
+      jsonDetail: "Confira se você colou o conteúdo completo do arquivo .passport.json.",
+      intactLabel: "✅ Selo íntegro",
+      intactDetail: (h) => "O passaporte não foi alterado desde a emissão. Hash confere: " + h + "…",
+      tamperLabel: "⛔ Documento adulterado",
+      tamperDetail: (e, a) => "Hash gravado: " + e + "… &nbsp;≠&nbsp; recalculado: " + a + "…",
+    },
+    cert: {
+      gold: "Ouro",
+      docTitle: "Passaporte de Procedência",
+      eyebrow: "Passaporte de Procedência · Proof of Provenance",
+      certifiedLot: "Lote Certificado",
+      titleSub: "Gerado e verificado offline no dispositivo · QVAC edge AI",
+      statusLabel: "Status",
+      lotK: "Lote / Amostra",
+      f: { titular: "Titular", taxid: "CNPJ/CPF", anm: "Processo ANM", regime: "Regime", munuf: "Município / UF", coord: "Coordenadas", teor: "Teor", massa: "Massa", emissao: "Emissão", validade: "Validade" },
+      verifyH: "Verificação — checagens automáticas (regras auditáveis)",
+      noChecks: "Sem checagens",
+      sealAria: "Selo de procedência",
+      sealText: "• PROCEDÊNCIA VERIFICADA • OURO • QVAC •",
+      sealK: "Selo criptográfico",
+      metaGerado: "Gerado em", metaFonte: "Fonte",
+      tamperOk: "Documento selado: qualquer alteração de um único caractere invalida o selo.",
+      tamperBad: "⚠ Selo inválido: os dados foram alterados após a emissão.",
+      stamp: "Adulterado",
+      status: { valida: "VÁLIDA", atencao: "ATENÇÃO", vencida: "VENCIDA", incompleta: "INCOMPLETA", nao_identificado: "NÃO IDENTIFICADA" },
+      adulterado: "ADULTERADO",
+    },
+  },
+
+  en: {
+    htmlLang: "en", dateLoc: "en-US",
+    page: {
+      lede: 'Gold provenance passport, generated <b>offline on your device</b> and <b>publicly verifiable</b> by anyone — no server, no need to trust anyone.',
+      how0: "📷 Document", how1: "🔒 Generated offline (OCR + local AI)", how2: "🔏 Sealed (SHA-256)", how3: "✅ Verified in your browser",
+      h2: "Verify a passport",
+      cardP: 'Paste the passport JSON or load the file. Verification recomputes the cryptographic seal <b>right here in your browser</b> — nothing is sent to any server.',
+      inputPh: "Paste the contents of the .passport.json file here",
+      btnFile: "Load file…", btnSample: "Load example", btnVerify: "Verify seal",
+      certH: "Certificate",
+      foot1: "100% in-browser verification (Web Crypto · SHA-256). No data leaves your device.",
+      foot2: '<a href="https://github.com/FelixRodrigues007/qvac-ouro-passaporte" target="_blank" rel="noopener">Code on GitHub</a> &nbsp;·&nbsp; Built with <a href="https://qvac.tether.io" target="_blank" rel="noopener">QVAC</a> (Tether) edge AI',
+    },
+    msg: {
+      cryptoLabel: "Verification unavailable here",
+      cryptoDetail: "Open this page over HTTPS (e.g. on Vercel) — the browser only allows seal computation in a secure context.",
+      jsonLabel: "Invalid JSON",
+      jsonDetail: "Make sure you pasted the full contents of the .passport.json file.",
+      intactLabel: "✅ Seal intact",
+      intactDetail: (h) => "The passport hasn't been altered since issuance. Hash matches: " + h + "…",
+      tamperLabel: "⛔ Tampered document",
+      tamperDetail: (e, a) => "Stored hash: " + e + "… &nbsp;≠&nbsp; recomputed: " + a + "…",
+    },
+    cert: {
+      gold: "Gold",
+      docTitle: "Provenance Passport",
+      eyebrow: "Provenance Passport · Proof of Provenance",
+      certifiedLot: "Certified Lot",
+      titleSub: "Generated and verified offline on the device · QVAC edge AI",
+      statusLabel: "Status",
+      lotK: "Lot / Sample",
+      f: { titular: "Holder", taxid: "Tax ID", anm: "ANM Process", regime: "Regime", munuf: "Municipality / State", coord: "Coordinates", teor: "Grade", massa: "Mass", emissao: "Issued", validade: "Valid until" },
+      verifyH: "Verification — automatic checks (auditable rules)",
+      noChecks: "No checks",
+      sealAria: "Provenance seal",
+      sealText: "• PROVENANCE VERIFIED • GOLD • QVAC •",
+      sealK: "Cryptographic seal",
+      metaGerado: "Generated on", metaFonte: "Source",
+      tamperOk: "Sealed document: changing a single character invalidates the seal.",
+      tamperBad: "⚠ Invalid seal: the data was altered after issuance.",
+      stamp: "Tampered",
+      status: { valida: "VALID", atencao: "ATTENTION", vencida: "EXPIRED", incompleta: "INCOMPLETE", nao_identificado: "NOT IDENTIFIED" },
+      adulterado: "TAMPERED",
+    },
+  },
+
+  es: {
+    htmlLang: "es", dateLoc: "es-ES",
+    page: {
+      lede: 'Pasaporte de procedencia de oro, generado <b>sin conexión en el dispositivo</b> y <b>verificable públicamente</b> por cualquier persona — sin servidor, sin necesidad de confiar en nadie.',
+      how0: "📷 Documento", how1: "🔒 Generado sin conexión (OCR + IA local)", how2: "🔏 Sellado (SHA-256)", how3: "✅ Verificado en tu navegador",
+      h2: "Verificar un pasaporte",
+      cardP: 'Pega el JSON del pasaporte o carga el archivo. La verificación recalcula el sello criptográfico <b>aquí en tu navegador</b> — nada se envía a ningún servidor.',
+      inputPh: "Pega aquí el contenido del archivo .passport.json",
+      btnFile: "Cargar archivo…", btnSample: "Cargar ejemplo", btnVerify: "Verificar sello",
+      certH: "Certificado",
+      foot1: "Verificación 100% en el navegador (Web Crypto · SHA-256). Ningún dato sale de tu dispositivo.",
+      foot2: '<a href="https://github.com/FelixRodrigues007/qvac-ouro-passaporte" target="_blank" rel="noopener">Código en GitHub</a> &nbsp;·&nbsp; Construido con <a href="https://qvac.tether.io" target="_blank" rel="noopener">QVAC</a> (Tether) edge AI',
+    },
+    msg: {
+      cryptoLabel: "Verificación no disponible aquí",
+      cryptoDetail: "Abre esta página por HTTPS (p. ej. en Vercel) — el navegador solo permite calcular el sello en un contexto seguro.",
+      jsonLabel: "JSON inválido",
+      jsonDetail: "Verifica que pegaste el contenido completo del archivo .passport.json.",
+      intactLabel: "✅ Sello íntegro",
+      intactDetail: (h) => "El pasaporte no ha sido alterado desde su emisión. El hash coincide: " + h + "…",
+      tamperLabel: "⛔ Documento adulterado",
+      tamperDetail: (e, a) => "Hash guardado: " + e + "… &nbsp;≠&nbsp; recalculado: " + a + "…",
+    },
+    cert: {
+      gold: "Oro",
+      docTitle: "Pasaporte de Procedencia",
+      eyebrow: "Pasaporte de Procedencia · Proof of Provenance",
+      certifiedLot: "Lote Certificado",
+      titleSub: "Generado y verificado sin conexión en el dispositivo · QVAC edge AI",
+      statusLabel: "Estado",
+      lotK: "Lote / Muestra",
+      f: { titular: "Titular", taxid: "ID fiscal", anm: "Proceso ANM", regime: "Régimen", munuf: "Municipio / Estado", coord: "Coordenadas", teor: "Ley", massa: "Masa", emissao: "Emisión", validade: "Validez" },
+      verifyH: "Verificación — comprobaciones automáticas (reglas auditables)",
+      noChecks: "Sin comprobaciones",
+      sealAria: "Sello de procedencia",
+      sealText: "• PROCEDENCIA VERIFICADA • ORO • QVAC •",
+      sealK: "Sello criptográfico",
+      metaGerado: "Generado el", metaFonte: "Fuente",
+      tamperOk: "Documento sellado: cambiar un solo carácter invalida el sello.",
+      tamperBad: "⚠ Sello inválido: los datos fueron alterados después de la emisión.",
+      stamp: "Adulterado",
+      status: { valida: "VÁLIDA", atencao: "ATENCIÓN", vencida: "VENCIDA", incompleta: "INCOMPLETA", nao_identificado: "NO IDENTIFICADA" },
+      adulterado: "ADULTERADO",
+    },
+  },
+};
+
+/**
+ * Renders the passport as an HTML certificate (security-document style).
+ * Pure Node/JS — does not import anything from QVAC.
+ *   renderCertificate(passport, { seloIntegro, lang })  ->  HTML string
+ * If seloIntegro === false, the certificate comes out with the "TAMPERED" stamp.
+ */
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"]/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])
+  );
+}
+function ou(v) {
+  return v == null || String(v).trim() === "" ? "—" : esc(v);
+}
+
+// Only the colors per status; the labels come from the language dictionary.
+const STATUS = {
+  valida: { cor: "#1f7a53", bg: "#e7f1ea" },
+  atencao: { cor: "#b6791f", bg: "#f7efdd" },
+  vencida: { cor: "#9e2b2b", bg: "#f6e7e7" },
+  incompleta: { cor: "#b6791f", bg: "#f7efdd" },
+  nao_identificado: { cor: "#5b6b63", bg: "#eef0ed" },
+};
+
+function renderCertificate(p, opcoes = {}) {
+  const seloIntegro = opcoes.seloIntegro !== false;
+  const L = I18N[opcoes.lang] || I18N.pt;
+  const C = L.cert;
+
+  const v = p.verificacao || {};
+  let st = STATUS[v.status_licenca] || STATUS.nao_identificado;
+  let label = C.status[v.status_licenca] || C.status.nao_identificado;
+  const adulterado = !seloIntegro;
+  if (adulterado) {
+    st = { cor: "#9e2b2b", bg: "#f6e7e7" };
+    label = C.adulterado;
+  }
+
+  const doc = p.documento || {},
+    tit = p.titular || {},
+    ar = p.area || {},
+    min = p.minerio || {},
+    org = p.origem || {},
+    selo = p.selo || {};
+
+  const massa = [min.massa, min.unidade].filter((x) => x != null && String(x).trim() !== "").join(" ");
+  const regime = ar.regime ? String(ar.regime).toUpperCase() : "";
+  // Substance: translate the known case (gold); otherwise capitalize whatever came in.
+  let substancia = min.substancia ? String(min.substancia).replace(/^\w/, (m) => m.toUpperCase()) : "—";
+  if (min.substancia && String(min.substancia).toLowerCase() === "ouro") substancia = C.gold;
+
+  const checagens = (v.checagens || [])
+    .map((c) => {
+      const s = String(c).trim();
+      const ok = s.startsWith("✓");
+      const texto = esc(s.replace(/^✓\s?/, "").replace(/^⚠️\s?/, ""));
+      return `<div class="check ${ok ? "ok" : "warn"}"><span class="check__mark">${ok ? "✓" : "⚠"}</span>${texto}</div>`;
+    })
+    .join("\n        ");
+
+  const dataGerado = selo.gerado_em
+    ? new Date(selo.gerado_em).toLocaleString(L.dateLoc, { dateStyle: "short", timeStyle: "short" })
+    : "—";
+
+  return `<!DOCTYPE html>
+<html lang="${L.htmlLang}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${C.docTitle} — ${ou(org.lote)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#12241d;--ink-soft:#33483f;--paper:#f6f2e8;--paper-edge:#efe9d8;
+    --gold:#b8891f;--rule:rgba(18,36,29,.16);--rule-strong:rgba(18,36,29,.34);
+    --st:${st.cor};--st-bg:${st.bg};}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"IBM Plex Sans",system-ui,sans-serif;
+    background:radial-gradient(120% 80% at 50% -10%,#1c352b 0%,#12241d 55%,#0c1813 100%);
+    color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;}
+  .doc{width:100%;max-width:760px;background:linear-gradient(180deg,var(--paper),var(--paper-edge));
+    border:1px solid var(--gold);box-shadow:0 30px 70px rgba(0,0,0,.45);position:relative;overflow:hidden;}
+  .doc::after{content:"";position:absolute;inset:10px;border:1px solid var(--rule);pointer-events:none;}
+  .doc__inner{padding:42px 48px 36px;position:relative;z-index:1}
+  ${adulterado ? `.stamp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:3;pointer-events:none}
+  .stamp span{border:5px solid #9e2b2b;color:#9e2b2b;font-family:"IBM Plex Serif",serif;font-weight:600;
+    font-size:46px;letter-spacing:.08em;padding:10px 34px;transform:rotate(-16deg);opacity:.82;border-radius:6px;
+    text-transform:uppercase;background:rgba(246,231,231,.35)}` : ""}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding-bottom:20px;border-bottom:1.5px solid var(--rule-strong)}
+  .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  .title{font-family:"IBM Plex Serif",serif;font-weight:600;font-size:30px;line-height:1.05;margin-top:8px;letter-spacing:-.01em}
+  .title small{display:block;font-size:13px;font-weight:400;font-style:italic;color:var(--ink-soft);margin-top:6px}
+  .status{flex-shrink:0;text-align:center;border:1px solid var(--st);background:var(--st-bg);padding:10px 16px;min-width:118px}
+  .status__dot{width:8px;height:8px;border-radius:50%;background:var(--st);display:inline-block;margin-right:7px;vertical-align:middle}
+  .status__label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+  .status__value{font-family:"IBM Plex Serif",serif;font-weight:600;font-size:17px;color:var(--st);margin-top:2px}
+  .lot{display:flex;align-items:baseline;gap:14px;margin:22px 0 6px}
+  .lot__k{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft)}
+  .lot__v{font-family:"IBM Plex Mono",monospace;font-size:22px;font-weight:500;letter-spacing:.02em}
+  .substance{font-family:"IBM Plex Serif",serif;font-size:15px;color:var(--gold);font-weight:600;margin-left:auto}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:0 40px;margin-top:18px}
+  .field{padding:13px 0;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+  .field__k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);white-space:nowrap}
+  .field__v{font-family:"IBM Plex Mono",monospace;font-size:13.5px;text-align:right;font-weight:500}
+  .verify{margin-top:26px;background:var(--st-bg);border-left:3px solid var(--st);padding:16px 20px}
+  .verify__h{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:10px}
+  .check{display:flex;align-items:center;gap:9px;font-size:13px;padding:3px 0}
+  .check.ok .check__mark{color:#1f7a53;font-weight:700}
+  .check.warn .check__mark{color:#b6791f;font-weight:700}
+  .foot{display:flex;gap:26px;align-items:center;margin-top:30px;padding-top:24px;border-top:1.5px solid var(--rule-strong)}
+  .seal{flex-shrink:0}.seal svg{display:block}
+  .hashbox{flex:1;min-width:0}
+  .hashbox__k{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);display:flex;align-items:center;gap:8px}
+  .hashbox__k .algo{border:1px solid var(--gold);color:var(--gold);padding:1px 7px;font-size:9px;letter-spacing:.1em}
+  .hashbox__hash{font-family:"IBM Plex Mono",monospace;font-size:12px;word-break:break-all;line-height:1.55;margin-top:7px${adulterado ? ";color:#9e2b2b;text-decoration:line-through" : ""}}
+  .hashbox__meta{font-size:11px;color:var(--ink-soft);margin-top:11px;line-height:1.5}
+  .hashbox__meta b{font-weight:600;color:var(--ink)}
+  .tamper{margin-top:14px;font-size:11px;color:${adulterado ? "#9e2b2b" : "var(--ink-soft)"};font-style:italic;text-align:center}
+  @media (max-width:560px){.doc__inner{padding:30px 24px}.grid{grid-template-columns:1fr}.head{flex-direction:column}.status{align-self:flex-start}.foot{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+  <article class="doc">
+    ${adulterado ? `<div class="stamp"><span>${esc(C.stamp)}</span></div>` : ""}
+    <div class="doc__inner">
+      <header class="head">
+        <div>
+          <div class="eyebrow">${esc(C.eyebrow)}</div>
+          <h1 class="title">${substancia} — ${esc(C.certifiedLot)}<small>${esc(C.titleSub)}</small></h1>
+        </div>
+        <div class="status">
+          <div class="status__label"><span class="status__dot"></span>${esc(C.statusLabel)}</div>
+          <div class="status__value">${esc(label)}</div>
+        </div>
+      </header>
+      <div class="lot">
+        <span class="lot__k">${esc(C.lotK)}</span>
+        <span class="lot__v">${ou(org.lote)}</span>
+        <span class="substance">${ou(substancia)} ${min.substancia ? "(Au)" : ""}</span>
+      </div>
+      <section class="grid">
+        <div class="field"><span class="field__k">${esc(C.f.titular)}</span><span class="field__v">${ou(tit.nome)}</span></div>
+        <div class="field"><span class="field__k">${esc(C.f.taxid)}</span><span class="field__v">${ou(tit.cpf_cnpj)}</span></div>
+        <div class="field"><span class="field__k">${esc(C.f.anm)}</span><span class="field__v">${ou(doc.numero_processo_anm)}</span></div>
+        <div class="field"><span class="field__k">${esc(C.f.regime)}</span><span class="field__v">${ou(regime)}</span></div>
+        <div class="field"><span class="field__k">${esc(C.f.munuf)}</span><span class="field__v">${ou(ar.municipio)} ${ar.uf ? "/ " + esc(ar.uf) : ""}</span></div>
+        <div class="field"><span class="field__k">${esc(C.f.coord)}</span><span class="field__v">${ou(ar.coordenadas)}</span></div>
+        <div class="field"><span class="field__k">${esc(C.f.teor)}</span><span class="field__v">${ou(min.teor)}</span></div>
+        <div class="field"><span class="field__k">${esc(C.f.massa)}</span><span class="field__v">${ou(massa)}</span></div>
+        <div class="field"><span class="field__k">${esc(C.f.emissao)}</span><span class="field__v">${ou(doc.data_emissao)}</span></div>
+        <div class="field"><span class="field__k">${esc(C.f.validade)}</span><span class="field__v">${ou(doc.validade)}</span></div>
+      </section>
+      <section class="verify">
+        <div class="verify__h">${esc(C.verifyH)}</div>
+        ${checagens || `<div class="check warn"><span class="check__mark">⚠</span>${esc(C.noChecks)}</div>`}
+      </section>
+      <footer class="foot">
+        <div class="seal" aria-label="${esc(C.sealAria)}">
+          <svg width="116" height="116" viewBox="0 0 116 116" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="foil" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e3c766"/><stop offset=".5" stop-color="#b8891f"/><stop offset="1" stop-color="#8a6512"/></linearGradient>
+              <path id="ring" d="M58,58 m-40,0 a40,40 0 1,1 80,0 a40,40 0 1,1 -80,0"/>
+            </defs>
+            <circle cx="58" cy="58" r="55" fill="none" stroke="url(#foil)" stroke-width="1.4"/>
+            <circle cx="58" cy="58" r="49" fill="none" stroke="url(#foil)" stroke-width="2.4"/>
+            <circle cx="58" cy="58" r="33" fill="none" stroke="url(#foil)" stroke-width="1"/>
+            <text font-family="IBM Plex Mono, monospace" font-size="7.6" letter-spacing="2.4" fill="#8a6512" font-weight="500"><textPath href="#ring" startOffset="0%">${esc(C.sealText)}</textPath></text>
+            <text x="58" y="54" text-anchor="middle" font-family="IBM Plex Serif, serif" font-size="26" font-weight="600" fill="url(#foil)">Au</text>
+            <text x="58" y="68" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="6.5" letter-spacing="1.5" fill="#8a6512">SHA-256</text>
+          </svg>
+        </div>
+        <div class="hashbox">
+          <div class="hashbox__k">${esc(C.sealK)} <span class="algo">${ou(selo.algoritmo || "SHA-256")}</span></div>
+          <div class="hashbox__hash">${ou(selo.hash)}</div>
+          <div class="hashbox__meta"><b>${esc(C.metaGerado)}</b> ${esc(dataGerado)} &nbsp;·&nbsp; <b>${esc(C.metaFonte)}</b> ${ou(v.fonte || "OCR offline + LLM local (QVAC)")}</div>
+        </div>
+      </footer>
+      <p class="tamper">${adulterado ? esc(C.tamperBad) : esc(C.tamperOk)}</p>
+    </div>
+  </article>
+</body>
+</html>`;
+}
+
+
+// ---- Seal verification (same logic as seal.js, via Web Crypto) ----
+function canonical(v){
+  if(Array.isArray(v)) return v.map(canonical);
+  if(v && typeof v==="object") return Object.keys(v).sort().reduce((o,k)=>{o[k]=canonical(v[k]);return o;},{});
+  return v;
+}
+async function sha256hex(str){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function verificarSelo(p){
+  const {selo, ...resto} = p;
+  const atual = await sha256hex(JSON.stringify(canonical(resto)));
+  return { integro: (p && p.selo && p.selo.hash) === atual, esperado: p && p.selo && p.selo.hash, atual };
+}
+
+// ---- UI ----
+const $ = (id)=>document.getElementById(id);
+const statusEl=$("status"), pill=$("pill"), detail=$("detail"), resultWrap=$("resultWrap"), cert=$("cert");
+
+let lang = "pt";            // current language
+let last = null;            // last verified passport { p, integro } (for re-render when switching language)
+
+function applyLang(l){
+  lang = I18N[l] ? l : "pt";
+  const T = I18N[lang];
+  document.documentElement.lang = T.htmlLang;
+  // static page texts (data-i18n)
+  document.querySelectorAll("[data-i18n]").forEach((el)=>{
+    const txt = T.page[el.dataset.i18n];
+    if(txt != null) el.innerHTML = txt;
+  });
+  $("input").placeholder = T.page.inputPh;
+  // mark the active button in the toggle
+  document.querySelectorAll(".lang button").forEach((b)=> b.classList.toggle("active", b.dataset.lang===lang));
+  // if there's already a certificate on screen, re-render it in the new language
+  if(last && resultWrap.classList.contains("show")){
+    cert.srcdoc = renderCertificate(last.p, { seloIntegro: last.integro, lang });
+  }
+  try{ localStorage.setItem("aupass_lang", lang); }catch(e){}
+}
+
+async function verificar(){
+  const M = I18N[lang].msg;
+  if(!window.crypto || !crypto.subtle){ showStatus(false, M.cryptoLabel, M.cryptoDetail); resultWrap.classList.remove("show"); return; }
+  let p;
+  try { p = JSON.parse($("input").value); }
+  catch(e){ showStatus(false, M.jsonLabel, M.jsonDetail); resultWrap.classList.remove("show"); return; }
+
+  const { integro, esperado, atual } = await verificarSelo(p);
+  last = { p, integro };
+  if(integro){
+    showStatus(true, M.intactLabel, M.intactDetail((atual||"").slice(0,24)));
+  } else {
+    showStatus(false, M.tamperLabel, M.tamperDetail((esperado||"—").slice(0,24), (atual||"—").slice(0,24)));
+  }
+  cert.srcdoc = renderCertificate(p, { seloIntegro: integro, lang });
+  resultWrap.classList.add("show");
+}
+
+function showStatus(ok, label, det){
+  statusEl.className = "status show " + (ok ? "ok" : "bad");
+  pill.textContent = label;
+  detail.innerHTML = det;
+}
+
+$("btnVerify").addEventListener("click", verificar);
+$("btnSample").addEventListener("click", ()=>{ $("input").value = $("sample").textContent.trim(); verificar(); });
+$("btnFile").addEventListener("click", ()=> $("file").click());
+$("file").addEventListener("change", (e)=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{ $("input").value = r.result; verificar(); };
+  r.readAsText(f);
+});
+
+// language toggle
+document.querySelectorAll(".lang button").forEach((b)=> b.addEventListener("click", ()=> applyLang(b.dataset.lang)));
+
+// initial language: saved > browser language (en/es) > pt
+let inicial;
+try{ inicial = localStorage.getItem("aupass_lang"); }catch(e){}
+if(!inicial){
+  const nav = (navigator.language || "").slice(0,2).toLowerCase();
+  inicial = (nav === "en" || nav === "es") ? nav : "pt";
+}
+applyLang(inicial);
+  </script>
+</body>
+</html>
