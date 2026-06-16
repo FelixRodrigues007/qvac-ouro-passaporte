@@ -29,8 +29,9 @@ logp=$(mktemp); logr=$(mktemp)
 echo "▶ provider (stable identity from \"$SEED_PHRASE\")…"
 QVAC_HYPERSWARM_SEED="$SEED" node scripts/p2p-provider.js >"$logp" 2>&1 &
 PROV=$!
+n=0
 while ! grep -q 'PROVIDER_PUBLIC_KEY=' "$logp" 2>/dev/null; do
-  if grep -qE '❌|Invalid input|Error:' "$logp" 2>/dev/null; then echo "provider failed:"; tail -15 "$logp"; cleanup; fi
+  n=$((n + 1)); if [ "$n" -gt 80 ]; then echo "provider did not come up in time:"; tail -20 "$logp"; cleanup; fi
   sleep 0.5
 done
 KEY=$(grep -m1 'PROVIDER_PUBLIC_KEY=' "$logp" | sed 's/.*PROVIDER_PUBLIC_KEY=//')
@@ -39,8 +40,9 @@ echo "  provider key: ${KEY:0:8}…"
 echo "▶ relay (delegated consumer)…"
 PROVIDER_KEY="$KEY" node scripts/p2p-relay.js >"$logr" 2>&1 &
 RELAY=$!
+n=0
 while ! grep -q 'Relay on http' "$logr" 2>/dev/null; do
-  if grep -qE 'Usage:|Error:' "$logr" 2>/dev/null; then echo "relay failed:"; tail -15 "$logr"; cleanup; fi
+  n=$((n + 1)); if [ "$n" -gt 80 ]; then echo "relay did not come up in time:"; tail -20 "$logr"; cleanup; fi
   sleep 0.5
 done
 echo "  relay on http://localhost:$PORT"
