@@ -714,7 +714,7 @@ applyLang(inicial);
       try {
         var ctrl = new AbortController();
         var to = setTimeout(function () { ctrl.abort(); }, 4000);
-        var hr = await fetch(relay + "/health", { signal: ctrl.signal });
+        var hr = await fetch(relay + "/health", { signal: ctrl.signal, headers: { "ngrok-skip-browser-warning": "1" } });
         clearTimeout(to);
         var hb = await hr.json();
         if (hb && hb.ok) wrap.style.display = "block";
@@ -732,7 +732,7 @@ applyLang(inicial);
       out.className = "status show";
       out.innerHTML = "<span class='pill'>" + t().wait + "</span>";
       try {
-        var r = await fetch(relay + "/delegate");
+        var r = await fetch(relay + "/delegate", { headers: { "ngrok-skip-browser-warning": "1" } });
         var d = await r.json();
         if (d.error) throw new Error(d.error);
         var s = d.stats || {};
