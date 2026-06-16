@@ -89,6 +89,8 @@ The status (**VALID / ATTENTION / EXPIRED**) is produced by explainable rules, n
 
 Not every field device can run a 4B-parameter LLM. QVAC's **delegated inference** lets a weak device offload the heavy model to a stronger **peer** — a direct, end-to-end-encrypted Holepunch connection with **no server and no third party** in between. In AuPass terms: a cheap device at the collection point delegates the extraction LLM to the cooperative's own machine, keeping everything inside the operator's devices. This is **serverless P2P** (peers find each other over a DHT) — a different axis from the 100%-offline core, and the most QVAC-specific capability in the SDK.
 
+It's wired into the real pipeline: with `--delegate <key>`, **only the heavy LLM extraction runs on the peer** — OCR, verification, and the seal stay local. The passport records where the LLM ran, and that field is *inside the seal*, so the certificate stays honest about its own process.
+
 **Run it** (two terminals on the same machine, or two devices on a network):
 
 ```bash
@@ -96,19 +98,20 @@ Not every field device can run a 4B-parameter LLM. QVAC's **delegated inference*
 npm run p2p:provider
 # → prints PROVIDER_PUBLIC_KEY=<key>
 
-# Terminal 2 — the consumer: loads NO local model; delegates to the peer.
-PROVIDER_KEY=<key> npm run p2p:consumer
+# Terminal 2 — generate a passport whose LLM extraction is delegated to the peer.
+npm run passport -- ./samples/laudo-ouro-EXEMPLO.png --delegate <key>
 ```
 
-**Proven on the demo machine** — the consumer loaded no local model, and the LLM ran on the provider's GPU, reached over P2P:
+(`scripts/p2p-consumer.js` is a minimal standalone proof of just the delegation handshake.)
+
+**Proven on the demo machine** — OCR ran locally while the LLM ran on the peer's GPU, reached over P2P:
 
 ```
-isDelegated: true
-"Ouro é um metal precioso e valioso."
-stats → timeToFirstToken: 232 ms · tokensPerSecond: 41.5 · generatedTokens: 310 · backendDevice: "gpu"
+🛰️  Extraction DELEGATED to peer: c9a3b6ee…
+   isDelegated: true
+   OCR (local): 2.5 s · LLM (delegated): TTFT 1233 ms · 41.4 tok/s
+verificacao.fonte → "OCR offline (on-device) + LLM delegado a peer via P2P (QVAC)"
 ```
-
-`scripts/p2p-provider.js` and `scripts/p2p-consumer.js` are the minimal, self-contained proof.
 
 ## Audit log
 
@@ -155,11 +158,11 @@ docs/               verified QVAC API notes + passport schema
 - [x] Public client-side verifier deployed on Vercel (PT / EN / ES)
 - [x] Structured audit log (committed)
 - [x] Demo video + BUIDL submitted on DoraHacks
-- [x] **P2P delegated inference proven** — LLM runs on a peer's GPU over Holepunch; the consumer loads no local model
+- [x] **P2P delegated inference, integrated** — `npm run passport … --delegate` runs the LLM extraction on a peer over Holepunch (OCR / verify / seal stay local; the seal records it)
 
 ## Roadmap
 
-- [ ] **Delegated extraction in the pipeline** — wire the proven P2P delegation into `npm run passport` (a `--delegate <key>` flag), plus a sealed-passport custody handoff device→device
+- [ ] **Sealed-passport custody handoff** — pass a sealed passport device→device over the same P2P channel, with no server in the chain of custody
 - [ ] **Official ANM cross-check** — an online step, deliberately separate from the offline core
 - [ ] **Multimodal vision** for messier, lower-quality documents
 - [ ] **On-chain anchoring** of the seal, and the tokenization layer on top
