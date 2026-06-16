@@ -7,17 +7,6 @@ import { join } from "node:path";
 import { close } from "@qvac/sdk";
 import { buildPassport } from "./pipeline.js";
 
-/** Turns the batch into a safe id for the file name (or null if empty). */
-function sanitizarId(valor) {
-  if (!valor || typeof valor !== "string") return null;
-  const limpo = valor
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  return limpo || null;
-}
-
 const SELOS = {
   valida: "✅ VALID",
   vencida: "⛔ EXPIRED",
@@ -34,7 +23,7 @@ if (!imagePath) {
 
 try {
   console.log("📷 Reading document (offline):", imagePath);
-  const { rawText, passport } = await buildPassport(imagePath);
+  const { rawText, passport, id } = await buildPassport(imagePath);
 
   console.log("\n--- Raw text (OCR) ---\n" + rawText);
   console.log("\n--- Provenance passport ---");
@@ -48,13 +37,13 @@ try {
   console.log("");
 
   // Saves the sealed passport to out/<id>.passport.json (sensitive data, outside git).
-  const id = sanitizarId(passport?.origem?.lote) || `passaporte-${Date.now()}`;
   mkdirSync("out", { recursive: true });
   const caminho = join("out", `${id}.passport.json`);
   writeFileSync(caminho, JSON.stringify(passport, null, 2), "utf8");
 
   console.log("🔏 Seal (SHA-256): " + (passport.selo?.hash || "(no seal)"));
-  console.log("📄 File: " + caminho + "\n");
+  console.log("📄 File: " + caminho);
+  console.log("📈 Audit: out/" + id + ".audit.json\n");
 } catch (error) {
   console.error("❌ Error:", error);
   process.exitCode = 1;

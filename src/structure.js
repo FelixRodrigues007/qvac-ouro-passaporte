@@ -33,26 +33,39 @@ Rules:
 - Dates and numbers as they appear in the document (e.g.: "12,4 g/t").`;
 }
 
-export async function structureProvenance(rawText) {
+export async function structureProvenance(rawText, audit) {
+  audit?.modelLoadStart("LLM (Qwen3 4B)");
   const modelId = await loadModel({
     modelSrc: LLM_MODEL,
     modelType: "llm",
     modelConfig: { ctx_size: 8192, temp: 0.2 },
   });
+  audit?.modelLoadEnd("LLM (Qwen3 4B)", { src: LLM_MODEL, ctx_size: 8192 });
 
   try {
+    const userPrompt = buildPrompt(rawText);
     const history = [
       { role: "system", content: SYSTEM },
-      { role: "user", content: buildPrompt(rawText) },
+      { role: "user", content: userPrompt },
     ];
+
+    // Measure the inference (TTFT + tokens/sec) on the actual streamed tokens.
+    const t = audit?.inferenceStart("LLM (Qwen3 4B)", userPrompt);
     const result = completion({ modelId, history, stream: true });
 
     let saida = "";
-    for await (const token of result.tokenStream) saida += token;
+    let first = true;
+    for await (const token of result.tokenStream) {
+      if (first) { t?.firstToken(); first = false; }
+      t?.token();
+      saida += token;
+    }
+    t?.end();
 
     return safeParseJson(saida);
   } finally {
     await unloadModel({ modelId });
+    audit?.modelUnload("LLM (Qwen3 4B)");
   }
 }
 

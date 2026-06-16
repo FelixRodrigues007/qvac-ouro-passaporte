@@ -9,7 +9,9 @@ samples/*
 !samples/README.md
 
 # generated passports (contain personal/commercial data) — DO NOT version
-out/
+out/*
+# ...except the audit log, which MUST be versioned (auditability requirement)
+!out/*.audit.json
 
 # demo video assets (large binaries + embedded document) — DO NOT version
 video/

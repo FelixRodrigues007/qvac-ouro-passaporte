@@ -42,6 +42,22 @@ src/index.js             CLI entry point
 samples/                 real documents (not versioned)
 ```
 
+## Audit log
+Every run writes `out/<id>.audit.json` (same `<id>` as the passport). For that single
+execution it records:
+
+- **Model load / unload** — the OCR model (ONNX) and the local LLM (Qwen3 4B), with load timings.
+- **Inference metrics** — prompt size + preview, output tokens, **TTFT** (time to first token)
+  and **tokens/sec**.
+- The **device** it ran on (chip, RAM, storage, OS).
+
+This file **is committed** to the repo (auditability requirement). The passport JSON itself
+stays out of version control because it may contain personal/commercial data.
+
+## Remote APIs
+**None.** There are no remote API calls — OCR and the LLM run entirely **on-device** via the
+QVAC SDK. After the one-time model download, the whole pipeline works offline.
+
 ## Roadmap
 - [ ] Smoke test running (local AI OK)
 - [ ] Offline OCR on a real gold document

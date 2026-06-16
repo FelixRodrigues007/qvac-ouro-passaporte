@@ -1,14 +1,34 @@
 /**
  * Pipeline: document photo -> OCR (offline) -> LLM -> verification -> passport.
+ * Also records a structured audit log (model load/unload + inference metrics).
  */
 import { extractText } from "./ocr.js";
 import { structureProvenance } from "./structure.js";
 import { verificar } from "./verify.js";
 import { selar } from "./seal.js";
+import { createAudit } from "./audit.js";
+
+// Device specs — edit here. They are recorded in the audit log (out/<id>.audit.json).
+const DEVICE = {
+  model: "MacBook Pro",
+  chip: "Apple M3 Pro",
+  ram_gb: 36,
+  storage_gb: 512,
+  os: "macOS 26.5",
+};
+
+/** Turns the batch into a safe id for the file name (or null if empty). */
+function sanitizeId(value) {
+  if (!value || typeof value !== "string") return null;
+  const clean = value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return clean || null;
+}
 
 export async function buildPassport(imagePath) {
-  const { text, blocks } = await extractText(imagePath);
-  const passport = await structureProvenance(text);
+  const audit = createAudit({ device: DEVICE });
+
+  const { text, blocks } = await extractText(imagePath, audit);
+  const passport = await structureProvenance(text, audit);
 
   // Average OCR confidence: mean of the blocks with a defined confidence (null if none).
   const confs = (blocks || [])
@@ -29,5 +49,12 @@ export async function buildPassport(imagePath) {
   };
 
   // Seals the passport (SHA-256) only after it is complete, including the verification.
-  return { rawText: text, passport: selar(passport) };
+  const sealed = selar(passport);
+
+  // Audit log uses the SAME id as the passport.
+  const id = sanitizeId(sealed?.origem?.lote) || `passaporte-${Date.now()}`;
+  audit.save(`out/${id}.audit.json`);
+  console.log("\n" + audit.summary());
+
+  return { rawText: text, passport: sealed, id };
 }
