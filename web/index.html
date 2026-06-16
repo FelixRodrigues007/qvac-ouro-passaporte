@@ -183,6 +183,10 @@
     <section class="card">
       <h2 data-i18n="p2pTitle">Roda em qualquer lugar, sem confiar em ninguém</h2>
       <p data-i18n="p2pBody">100% offline no dispositivo. E quando o aparelho é fraco, o LLM pesado pode ser delegado a um peer por P2P criptografado (sem servidor, sem nuvem) — enquanto OCR, verificação e selo continuam locais.</p>
+      <div id="p2pLive" style="display:none;margin-top:16px">
+        <button class="primary" id="btnDelegate" data-i18n="p2pBtn">Delegar agora (ao vivo)</button>
+        <div id="p2pOut" class="status"></div>
+      </div>
     </section>
 
     <footer>
@@ -266,6 +270,7 @@ const I18N = {
       p2pTitle: "Roda em qualquer lugar, sem confiar em ninguém",
       p2pBody: "100% offline no dispositivo. E quando o aparelho é fraco, o LLM pesado pode ser delegado a um peer por P2P criptografado (sem servidor, sem nuvem) — enquanto OCR, verificação e selo continuam locais.",
       stepDoc: "Documento", stepOcr: "OCR offline", stepLlm: "LLM local", stepVerify: "Verificação", stepSeal: "Selo SHA-256",
+      p2pBtn: "Delegar agora (ao vivo)",
     },
     msg: {
       cryptoLabel: "Verificação indisponível aqui",
@@ -323,6 +328,7 @@ const I18N = {
       p2pTitle: "Runs anywhere, trusts no one",
       p2pBody: "100% offline on-device. And when the device is weak, the heavy LLM can be delegated to a peer over encrypted P2P (no server, no cloud) — while OCR, verification and the seal stay local.",
       stepDoc: "Document", stepOcr: "Offline OCR", stepLlm: "Local LLM", stepVerify: "Verification", stepSeal: "SHA-256 seal",
+      p2pBtn: "Delegate now (live)",
     },
     msg: {
       cryptoLabel: "Verification unavailable here",
@@ -380,6 +386,7 @@ const I18N = {
       p2pTitle: "Funciona en cualquier lugar, sin confiar en nadie",
       p2pBody: "100% offline en el dispositivo. Y cuando el equipo es débil, el LLM pesado puede delegarse a un peer por P2P cifrado (sin servidor, sin nube) — mientras OCR, verificación y sello siguen locales.",
       stepDoc: "Documento", stepOcr: "OCR offline", stepLlm: "LLM local", stepVerify: "Verificación", stepSeal: "Sello SHA-256",
+      p2pBtn: "Delegar ahora (en vivo)",
     },
     msg: {
       cryptoLabel: "Verificación no disponible aquí",
@@ -689,6 +696,49 @@ if(!inicial){
   inicial = (nav === "en" || nav === "es") ? nav : "pt";
 }
 applyLang(inicial);
+  </script>
+  <script>
+  /* Live P2P "Delegate now" — isolated add-on. Activates only when a relay URL is
+     configured (RELAY_URL below, or ?relay=https://your-relay). Does not touch the
+     verifier / seal / i18n logic above. */
+  (function () {
+    var RELAY_URL = "";
+    var qp = new URLSearchParams(location.search).get("relay");
+    var relay = (qp || RELAY_URL || "").replace(/\/+$/, "");
+    var wrap = document.getElementById("p2pLive");
+    var btn = document.getElementById("btnDelegate");
+    var out = document.getElementById("p2pOut");
+    if (!relay || !wrap || !btn || !out) return;
+    wrap.style.display = "block";
+    var L = {
+      pt: { wait: "Delegando ao peer…", ran: "Rodou no peer", err: "Falhou" },
+      en: { wait: "Delegating to peer…", ran: "Ran on peer", err: "Failed" },
+      es: { wait: "Delegando al peer…", ran: "Corrió en el peer", err: "Falló" },
+    };
+    var t = function () { return L[(document.documentElement.lang || "pt").slice(0, 2)] || L.pt; };
+    var clean = function (s) { return String(s == null ? "" : s).replace(/[<>]/g, ""); };
+    btn.addEventListener("click", async function () {
+      btn.disabled = true;
+      out.className = "status show";
+      out.innerHTML = "<span class='pill'>" + t().wait + "</span>";
+      try {
+        var r = await fetch(relay + "/delegate");
+        var d = await r.json();
+        if (d.error) throw new Error(d.error);
+        var s = d.stats || {};
+        var tps = s.tokensPerSecond ? Math.round(s.tokensPerSecond) : "—";
+        var ttft = s.timeToFirstToken ? Math.round(s.timeToFirstToken) : "—";
+        out.className = "status show ok";
+        out.innerHTML =
+          "<span class='pill'>✅ " + t().ran + " · " + clean((d.provider || "").slice(0, 8)) + "…</span>" +
+          "<div class='detail'>“" + clean(d.answer) + "”<br>isDelegated: " + d.isDelegated + " · " + tps + " tok/s · TTFT " + ttft + " ms</div>";
+      } catch (e) {
+        out.className = "status show bad";
+        out.innerHTML = "<span class='pill'>⛔ " + t().err + "</span><div class='detail'>" + clean(e.message || e) + "</div>";
+      }
+      btn.disabled = false;
+    });
+  })();
   </script>
 </body>
 </html>
