@@ -24,11 +24,12 @@ function sanitizeId(value) {
   return clean || null;
 }
 
-export async function buildPassport(imagePath) {
+export async function buildPassport(imagePath, options = {}) {
   const audit = createAudit({ device: DEVICE });
 
+  // OCR is always local; only the LLM extraction may be delegated to a peer.
   const { text, blocks } = await extractText(imagePath, audit);
-  const passport = await structureProvenance(text, audit);
+  const passport = await structureProvenance(text, audit, options.delegate);
 
   // Average OCR confidence: mean of the blocks with a defined confidence (null if none).
   const confs = (blocks || [])
@@ -45,7 +46,10 @@ export async function buildPassport(imagePath) {
     alertas: v.alertas,
     checagens: v.checagens,
     gerado_em: new Date().toISOString(),
-    fonte: "OCR offline + LLM local (QVAC)",
+    // The seal covers this field, so it must be honest about where the LLM ran.
+    fonte: options.delegate
+      ? "OCR offline (on-device) + LLM delegado a peer via P2P (QVAC)"
+      : "OCR offline + LLM local (QVAC)",
   };
 
   // Seals the passport (SHA-256) only after it is complete, including the verification.

@@ -1,6 +1,6 @@
 /**
  * CLI entry point.
- * Usage: npm run passport -- ./samples/<file>
+ * Usage: npm run passport -- ./samples/<file> [--delegate <providerPublicKey>]
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -15,15 +15,27 @@ const SELOS = {
   nao_identificado: "⬜ NOT IDENTIFIED",
 };
 
-const imagePath = process.argv[2];
+// Arg parsing: the first argument that does NOT start with "--" is the image path;
+// "--delegate <key>" delegates ONLY the LLM extraction to a P2P peer.
+const args = process.argv.slice(2);
+let imagePath = null;
+let delegateKey = null;
+for (let i = 0; i < args.length; i++) {
+  const a = args[i];
+  if (a === "--delegate") delegateKey = args[++i] ?? null;
+  else if (!a.startsWith("--") && imagePath === null) imagePath = a;
+}
 if (!imagePath) {
-  console.error("Usage: node src/index.js <image-path>");
+  console.error("Usage: node src/index.js <image-path> [--delegate <providerPublicKey>]");
   process.exit(1);
 }
 
 try {
+  if (delegateKey) {
+    console.log("🛰️  Extraction will be DELEGATED to peer: " + delegateKey.slice(0, 8) + "…");
+  }
   console.log("📷 Reading document (offline):", imagePath);
-  const { rawText, passport, id } = await buildPassport(imagePath);
+  const { rawText, passport, id } = await buildPassport(imagePath, { delegate: delegateKey || null });
 
   console.log("\n--- Raw text (OCR) ---\n" + rawText);
   console.log("\n--- Provenance passport ---");

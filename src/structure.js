@@ -2,7 +2,7 @@
  * LLM step: turns the raw OCR text into the "provenance passport" (JSON).
  * Runs locally via QVAC. See docs/provenance-schema.md for the fields.
  */
-import { loadModel, completion, unloadModel } from "@qvac/sdk";
+import { loadModel, completion, unloadModel, getLoadedModelInfo } from "@qvac/sdk";
 import { LLM_MODEL } from "./config.js";
 
 const SYSTEM = `/no_think
@@ -33,14 +33,28 @@ Rules:
 - Dates and numbers as they appear in the document (e.g.: "12,4 g/t").`;
 }
 
-export async function structureProvenance(rawText, audit) {
+export async function structureProvenance(rawText, audit, delegate = null) {
   audit?.modelLoadStart("LLM (Qwen3 4B)");
-  const modelId = await loadModel({
-    modelSrc: LLM_MODEL,
-    modelType: "llm",
-    modelConfig: { ctx_size: 8192, temp: 0.2 },
-  });
-  audit?.modelLoadEnd("LLM (Qwen3 4B)", { src: LLM_MODEL, ctx_size: 8192 });
+  let modelId;
+  if (delegate) {
+    // Delegated: the provider already loaded the model (ctx_size 8192 / temp 0.2),
+    // so we don't pass modelConfig — the LLM step runs on the peer's machine.
+    modelId = await loadModel({
+      modelSrc: LLM_MODEL,
+      modelType: "llm",
+      delegate: { providerPublicKey: delegate, fallbackToLocal: false },
+    });
+    audit?.modelLoadEnd("LLM (Qwen3 4B)", { src: LLM_MODEL, delegated: true, provider: delegate });
+    const info = await getLoadedModelInfo({ modelId });
+    console.log("   isDelegated:", info.isDelegated);
+  } else {
+    modelId = await loadModel({
+      modelSrc: LLM_MODEL,
+      modelType: "llm",
+      modelConfig: { ctx_size: 8192, temp: 0.2 },
+    });
+    audit?.modelLoadEnd("LLM (Qwen3 4B)", { src: LLM_MODEL, ctx_size: 8192 });
+  }
 
   try {
     const userPrompt = buildPrompt(rawText);
