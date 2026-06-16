@@ -31,6 +31,7 @@ A photo of a mining document (ANM license / PLG permit, lab assay, packing list)
 - 🧾 **HTML certificate** — a clean **VALID** state and a red **ADULTERATED** state.
 - 🌐 **Public verifier** — anyone re-checks a passport's seal in the browser, with no server and no trust required.
 - 📈 **Structured audit log** — model load/unload + prompt, tokens, TTFT and tokens/sec, per run.
+- 🛰️ **P2P delegated inference (bonus)** — a weak field device can offload the heavy LLM to a stronger peer over QVAC's Holepunch P2P: end-to-end encrypted, no server, no cloud.
 
 ## See it
 
@@ -84,6 +85,31 @@ The first run downloads the models (cached in `~/.qvac/models`); afterwards the 
 
 The status (**VALID / ATTENTION / EXPIRED**) is produced by explainable rules, not a black-box guess — validity dates, ANM process number, extraction regime, owner, and a real **CNPJ check-digit validation**. Each passport is then sealed with a SHA-256 hash over a *canonical* serialization of its data: reordering fields does not change the hash, but changing any value does. Because the seal also covers the verification verdict, a "valid" stamp cannot be transplanted onto tampered data.
 
+## P2P delegated inference (bonus)
+
+Not every field device can run a 4B-parameter LLM. QVAC's **delegated inference** lets a weak device offload the heavy model to a stronger **peer** — a direct, end-to-end-encrypted Holepunch connection with **no server and no third party** in between. In AuPass terms: a cheap device at the collection point delegates the extraction LLM to the cooperative's own machine, keeping everything inside the operator's devices. This is **serverless P2P** (peers find each other over a DHT) — a different axis from the 100%-offline core, and the most QVAC-specific capability in the SDK.
+
+**Run it** (two terminals on the same machine, or two devices on a network):
+
+```bash
+# Terminal 1 — the provider: loads the LLM and serves it over P2P. Keep it running.
+npm run p2p:provider
+# → prints PROVIDER_PUBLIC_KEY=<key>
+
+# Terminal 2 — the consumer: loads NO local model; delegates to the peer.
+PROVIDER_KEY=<key> npm run p2p:consumer
+```
+
+**Proven on the demo machine** — the consumer loaded no local model, and the LLM ran on the provider's GPU, reached over P2P:
+
+```
+isDelegated: true
+"Ouro é um metal precioso e valioso."
+stats → timeToFirstToken: 232 ms · tokensPerSecond: 41.5 · generatedTokens: 310 · backendDevice: "gpu"
+```
+
+`scripts/p2p-provider.js` and `scripts/p2p-consumer.js` are the minimal, self-contained proof.
+
 ## Audit log
 
 Every run writes `out/<id>.audit.json` (same `<id>` as the passport). For that single execution it records:
@@ -129,10 +155,11 @@ docs/               verified QVAC API notes + passport schema
 - [x] Public client-side verifier deployed on Vercel (PT / EN / ES)
 - [x] Structured audit log (committed)
 - [x] Demo video + BUIDL submitted on DoraHacks
+- [x] **P2P delegated inference proven** — LLM runs on a peer's GPU over Holepunch; the consumer loads no local model
 
 ## Roadmap
 
-- [ ] **P2P custody handoff** — deliver the sealed passport device→device via QVAC's delegated inference / Holepunch, with no server in the chain of custody
+- [ ] **Delegated extraction in the pipeline** — wire the proven P2P delegation into `npm run passport` (a `--delegate <key>` flag), plus a sealed-passport custody handoff device→device
 - [ ] **Official ANM cross-check** — an online step, deliberately separate from the offline core
 - [ ] **Multimodal vision** for messier, lower-quality documents
 - [ ] **On-chain anchoring** of the seal, and the tokenization layer on top
