@@ -709,7 +709,17 @@ applyLang(inicial);
     var btn = document.getElementById("btnDelegate");
     var out = document.getElementById("p2pOut");
     if (!relay || !wrap || !btn || !out) return;
-    wrap.style.display = "block";
+    // Reveal the live button only if the relay is actually online (graceful when it's off).
+    (async function () {
+      try {
+        var ctrl = new AbortController();
+        var to = setTimeout(function () { ctrl.abort(); }, 4000);
+        var hr = await fetch(relay + "/health", { signal: ctrl.signal });
+        clearTimeout(to);
+        var hb = await hr.json();
+        if (hb && hb.ok) wrap.style.display = "block";
+      } catch (e) { /* relay offline -> keep the button hidden */ }
+    })();
     var L = {
       pt: { wait: "Delegando ao peer…", ran: "Rodou no peer", err: "Falhou" },
       en: { wait: "Delegating to peer…", ran: "Ran on peer", err: "Failed" },
