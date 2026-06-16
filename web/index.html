@@ -702,7 +702,7 @@ applyLang(inicial);
      configured (RELAY_URL below, or ?relay=https://your-relay). Does not touch the
      verifier / seal / i18n logic above. */
   (function () {
-    var RELAY_URL = "";
+    var RELAY_URL = "https://snuff-mountain-movie.ngrok-free.dev";
     var qp = new URLSearchParams(location.search).get("relay");
     var relay = (qp || RELAY_URL || "").replace(/\/+$/, "");
     var wrap = document.getElementById("p2pLive");
