@@ -52,8 +52,17 @@ const server = createServer(async (req, res) => {
 
   if (url.pathname === "/delegate") {
     try {
-      const prompt = url.searchParams.get("q") || "Responda em 5 palavras: o que é ouro?";
-      const run = completion({ modelId, history: [{ role: "user", content: prompt }], stream: true });
+      const prompt = url.searchParams.get("q") || "O que é ouro?";
+      // /no_think keeps Qwen3 from emitting a long reasoning block -> fast, short answer
+      // (a slow ~12s response stalls the cloudflare quick tunnel in browsers).
+      const run = completion({
+        modelId,
+        history: [
+          { role: "system", content: "/no_think\nResponda de forma curta e direta, em no máximo 12 palavras." },
+          { role: "user", content: prompt },
+        ],
+        stream: true,
+      });
       let answer = "";
       for await (const ev of run.events) if (ev.type === "contentDelta") answer += ev.text;
       const final = await run.final;
