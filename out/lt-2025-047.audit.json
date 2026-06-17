@@ -1,6 +1,6 @@
 {
-  "run_started": "2026-06-16T15:57:12.940Z",
-  "run_finished": "2026-06-16T15:57:46.224Z",
+  "run_started": "2026-06-17T17:30:33.304Z",
+  "run_finished": "2026-06-17T17:31:14.685Z",
   "device": {
     "model": "MacBook Pro",
     "chip": "Apple M3 Pro",
@@ -10,15 +10,15 @@
   },
   "models": {
     "OCR (ONNX)": {
-      "load_start_ms": 500.912875,
-      "load_end_ms": 5463.594625,
-      "load_ms": 4962.7,
+      "load_start_ms": 206783.882,
+      "load_end_ms": 209765.369125,
+      "load_ms": 2981.5,
       "unloaded": true
     },
     "LLM (Qwen3 4B)": {
-      "load_start_ms": 18632.297459,
-      "load_end_ms": 25110.01975,
-      "load_ms": 6477.7,
+      "load_start_ms": 225050.156625,
+      "load_end_ms": 238983.162375,
+      "load_ms": 13933,
       "src": {
         "name": "QWEN3_4B_INST_Q4_K_M",
         "src": "registry://s3/qvac_models_compiled/ggml/Qwen3-4B/2025-06-27/Qwen3-4B-Q4_K_M.gguf",
@@ -36,60 +36,61 @@
         "quantization": "q4_K_M",
         "params": "4B"
       },
-      "ctx_size": 8192,
+      "delegated": true,
+      "provider": "50e5c43b7d19c066642765fff185e928c7562b25dd911cd6e6504aae1f170118",
       "unloaded": true
     }
   },
   "inferences": [
     {
       "model": "LLM (Qwen3 4B)",
-      "prompt_chars": 1478,
-      "prompt_preview": "Text extracted from the document (via OCR, may contain noise):\n\"\"\"\nDOCUMENTO FICTICIO\nSOMENTE PARA TESTE\nLABORATORIO GEOLOGICO EXEMPLO LTDA.\nLaudo de Ensaio\nCer",
-      "output_tokens": 276,
-      "ttft_ms": 1274.2,
-      "total_ms": 8488.2,
-      "tokens_per_sec": 38.26
+      "prompt_chars": 1467,
+      "prompt_preview": "Text extracted from the document (via OCR, may contain noise):\n\"\"\"\nDOCUMENTO FICTICIO\nSOMENTE PARA TESTE\nLABORATORIO GEOLOGICO\nEXEMPLO LTDA\nLaudo de Ensaio\nCert",
+      "output_tokens": 270,
+      "ttft_ms": 1322.4,
+      "total_ms": 9064.6,
+      "tokens_per_sec": 34.87
     }
   ],
   "events": [
     {
-      "at": "2026-06-16T15:57:12.940Z",
+      "at": "2026-06-17T17:30:33.304Z",
       "type": "model_load_start",
       "model": "OCR (ONNX)"
     },
     {
-      "at": "2026-06-16T15:57:17.903Z",
+      "at": "2026-06-17T17:30:36.286Z",
       "type": "model_load_end",
       "model": "OCR (ONNX)",
-      "load_ms": 4962.7
+      "load_ms": 2981.5
     },
     {
-      "at": "2026-06-16T15:57:31.072Z",
+      "at": "2026-06-17T17:30:51.571Z",
       "type": "model_unload",
       "model": "OCR (ONNX)"
     },
     {
-      "at": "2026-06-16T15:57:31.072Z",
+      "at": "2026-06-17T17:30:51.571Z",
       "type": "model_load_start",
       "model": "LLM (Qwen3 4B)"
     },
     {
-      "at": "2026-06-16T15:57:37.552Z",
+      "at": "2026-06-17T17:31:05.504Z",
       "type": "model_load_end",
       "model": "LLM (Qwen3 4B)",
-      "load_ms": 6477.7
+      "load_ms": 13933
     },
     {
-      "at": "2026-06-16T15:57:46.050Z",
+      "at": "2026-06-17T17:31:14.581Z",
       "type": "inference",
       "model": "LLM (Qwen3 4B)",
-      "output_tokens": 276,
-      "ttft_ms": 1274.2,
-      "total_ms": 8488.2,
-      "tokens_per_sec": 38.26
+      "output_tokens": 270,
+      "ttft_ms": 1322.4,
+      "total_ms": 9064.6,
+      "tokens_per_sec": 34.87
     },
     {
-      "at": "2026-06-16T15:57:46.216Z",
+      "at": "2026-06-17T17:31:14.684Z",
       "type": "model_unload",
       "model": "LLM (Qwen3 4B)"
     }

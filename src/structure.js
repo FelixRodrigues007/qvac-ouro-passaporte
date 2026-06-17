@@ -76,11 +76,32 @@ export async function structureProvenance(rawText, audit, delegate = null) {
     }
     t?.end();
 
-    return safeParseJson(saida);
+    const passport = safeParseJson(saida);
+    // Rebuild the degree symbol the OCR drops on coordinates (charset has no "°").
+    if (passport?.area && typeof passport.area === "object") {
+      passport.area.coordenadas = normalizeCoordinates(passport.area.coordenadas);
+    }
+    return passport;
   } finally {
     await unloadModel({ modelId });
     audit?.modelUnload("LLM (Qwen3 4B)");
   }
+}
+
+/**
+ * Reconstructs the degree symbol that the OCR loses on coordinates. The latin
+ * recognizer has no "°" in its charset, so it emits noise (a space, "*", or "9")
+ * where the degree sign should be — e.g. "24 30'S 50*24'W" or "24930'S". This
+ * rebuilds "24°30′S 50°24′W". Restricted to the coordinates value only: it acts
+ * solely on the "DD<noise>MM'<hemisphere>" shape, leaving every other field
+ * untouched.
+ */
+function normalizeCoordinates(value) {
+  if (typeof value !== "string") return value;
+  return value.replace(
+    /(\d{1,2})[°º*9\s]+(\d{2})\s*['´`’′]\s*([NSEW])/gi,
+    (_, deg, min, hemi) => `${deg}°${min}′${hemi.toUpperCase()}`
+  );
 }
 
 /** Extracts the JSON, stripping reasoning (<think>) and code fences. */

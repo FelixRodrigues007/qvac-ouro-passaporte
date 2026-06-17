@@ -7,6 +7,9 @@ node_modules/
 # real documents (sensitive) — DO NOT version
 samples/*
 !samples/README.md
+# ...except the fictional demo samples (watermarked "DOCUMENTO FICTÍCIO")
+!samples/laudo-ouro-EXEMPLO.png
+!samples/laudo-ouro-EXEMPLO.invalido.png
 
 # generated passports (contain personal/commercial data) — DO NOT version
 out/*
