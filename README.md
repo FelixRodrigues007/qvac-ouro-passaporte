@@ -3,14 +3,14 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-MIT-1f7a53" alt="MIT">
+  <img src="https://img.shields.io/badge/License-Apache_2.0-1f7a53" alt="Apache 2.0">
   <img src="https://img.shields.io/badge/Built%20with-QVAC%20edge%20AI-d8b24a" alt="QVAC">
   <img src="https://img.shields.io/badge/AI-100%25%20offline%20·%20on--device-12241d" alt="Offline">
   <img src="https://img.shields.io/badge/Seal-SHA--256%20tamper--evident-b8891f" alt="SHA-256">
 </p>
 
 <p align="center">
-  <b><a href="https://youtu.be/fgmCdoekb5A">▶️ Watch the demo</a></b>
+  <b><a href="https://youtu.be/zM76XOV0gV0">▶️ Watch the demo</a></b>
   &nbsp;·&nbsp;
   <b><a href="https://web-felix-rodrigues-projects.vercel.app">🌐 Try the live verifier</a></b>
 </p>
@@ -177,4 +177,4 @@ Focused on the offline provenance MVP. Tokenization and public fundraising are *
 
 ## License
 
-MIT © 2026 Felix Rodrigues. Built with [QVAC](https://qvac.tether.io) (Apache-2.0) by Tether.
+Apache 2.0 © 2026 Felix Rodrigues. Built with [QVAC](https://qvac.tether.io) (Apache-2.0) by Tether.

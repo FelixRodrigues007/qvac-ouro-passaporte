@@ -1,0 +1,17 @@
+{
+  "project": "AuPass — Proof of Provenance for Gold",
+  "uses_remote_apis": false,
+  "remote_apis": [],
+  "on_device": [
+    "OCR — ONNX Latin recognizer + CRAFT detector (via @qvac/sdk)",
+    "LLM extraction — Qwen3 4B (Q4_K_M, llama.cpp) (via @qvac/sdk)",
+    "Rule-based verification — dates, ANM process number, CNPJ/CPF check digit, OCR confidence",
+    "SHA-256 canonical seal — node:crypto (CLI) / Web Crypto (browser verifier)"
+  ],
+  "network_use": {
+    "model_download": "First run only: model weights are fetched from the QVAC registry and cached in ~/.qvac/models. After that, the whole pipeline runs fully offline (airplane-mode tested).",
+    "p2p_delegated_inference": "Optional demo: the heavy LLM can be delegated to a peer over an end-to-end-encrypted peer-to-peer connection (QVAC over Holepunch's DHT). No server, no cloud API — OCR, verification and the SHA-256 seal stay local."
+  },
+  "note": "AuPass makes ZERO remote API calls for inference. All AI runs on-device via the QVAC SDK.",
+  "generated": "2026-06-16"
+}
