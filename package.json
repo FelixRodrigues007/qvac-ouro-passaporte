@@ -15,7 +15,9 @@
     "p2p:provider": "node scripts/p2p-provider.js",
     "p2p:consumer": "node scripts/p2p-consumer.js",
     "p2p:relay": "node scripts/p2p-relay.js",
-    "p2p:live": "bash scripts/p2p-live.sh"
+    "p2p:live": "bash scripts/p2p-live.sh",
+    "benchmark": "node scripts/benchmark.js",
+    "hardware-proof": "bash scripts/hardware-proof.sh"
   },
   "dependencies": {
     "@qvac/sdk": "latest"

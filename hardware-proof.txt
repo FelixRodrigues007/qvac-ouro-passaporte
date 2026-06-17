@@ -1,0 +1,31 @@
+AuPass — hardware proof
+generated: Tue Jun 16 23:24:46 -03 2026
+
+===== system_profiler SPHardwareDataType =====
+Hardware:
+
+    Hardware Overview:
+
+      Model Name: MacBook Pro
+      Model Identifier: Mac15,7
+      Model Number: MRW23LL/A
+      Chip: Apple M3 Pro
+      Total Number of Cores: 12 (6 Performance and 6 Efficiency)
+      Memory: 36 GB
+      System Firmware Version: 18000.120.36
+      OS Loader Version: 18000.120.36
+      Serial Number (system): [redacted]
+      Hardware UUID: [redacted]
+      Provisioning UDID: [redacted]
+      Activation Lock Status: Enabled
+
+
+===== sw_vers =====
+ProductName:		macOS
+ProductVersion:		26.5
+BuildVersion:		25F71
+
+===== node --version =====
+v22.15.0
+===== npm --version =====
+10.9.2
