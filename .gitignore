@@ -11,6 +11,10 @@ samples/*
 !samples/laudo-ouro-EXEMPLO.png
 !samples/laudo-ouro-EXEMPLO.invalido.png
 
+# real AuPass documents (sensitive: CPF/CNPJ, coordinates) — DO NOT version
+documentos-reais/*
+!documentos-reais/README.md
+
 # generated passports (contain personal/commercial data) — DO NOT version
 out/*
 # ...except the audit log, which MUST be versioned (auditability requirement)

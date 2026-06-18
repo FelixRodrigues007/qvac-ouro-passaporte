@@ -21,6 +21,24 @@ function temValor(v) {
   return v !== null && v !== undefined && String(v).trim() !== "";
 }
 
+// Parses a gold grade string into grams per tonne, or null if absent / not a
+// g/t-style figure. Only g/t and ppm are gram-per-tonne equivalents (1 ppm Au =
+// 1 g/t). Handles Brazilian numbers ("1.289,05" -> 1289.05, "12,4" -> 12.4) while
+// leaving plain decimals ("0.35") intact, so a low grade is never misread as high.
+function parseTeorGt(teor) {
+  if (!teor || typeof teor !== "string") return null;
+  if (!/g\s*\/\s*t|ppm/i.test(teor)) return null;
+  let s = teor.match(/[\d.,]+/)?.[0];
+  if (!s) return null;
+  if (s.includes(",")) s = s.replace(/\./g, "").replace(",", "."); // dots = thousands
+  const num = parseFloat(s);
+  return Number.isNaN(num) ? null : num;
+}
+
+// Economic gold is typically ~1–10 g/t; world-class bonanza grades rarely exceed
+// a few tens of g/t. A reported grade far above this is a strong fraud/typo signal.
+const TEOR_OURO_MAX_PLAUSIVEL_GT = 50;
+
 // CNPJ/CPF validation via check digit (auditable, without relying on AI).
 function soDigitos(s){return String(s||'').replace(/\D/g,'');}
 function validarCNPJ(v){const c=soDigitos(v);if(c.length!==14||/^(\d)\1{13}$/.test(c))return false;const dv=(b,p)=>{const r=b.reduce((s,n,i)=>s+n*p[i],0)%11;return r<2?0:11-r;};const n=c.split('').map(Number);return dv(n.slice(0,12),[5,4,3,2,9,8,7,6,5,4,3,2])===n[12]&&dv(n.slice(0,13),[6,5,4,3,2,9,8,7,6,5,4,3,2])===n[13];}
@@ -110,6 +128,16 @@ export function verificar(p, opcoes = {}) {
   if (confiancaMedia != null && confiancaMedia < 0.7) {
     checagens.push(
       `⚠️ Low-confidence OCR reading (average ${confiancaMedia.toFixed(2)}) — review fields`
+    );
+    alertas++;
+  }
+
+  // 8) Gold grade sanity — an implausibly high grade signals fraud or a typo
+  // (the famous "80 g/t average / 1.289 g/t" claims of fabricated reports).
+  const teorGt = parseTeorGt(p?.minerio?.teor);
+  if (teorGt != null && teorGt > TEOR_OURO_MAX_PLAUSIVEL_GT) {
+    checagens.push(
+      `⚠️ Implausible gold grade (${p.minerio.teor}) — above ${TEOR_OURO_MAX_PLAUSIVEL_GT} g/t; likely fraud/typo, review`
     );
     alertas++;
   }
