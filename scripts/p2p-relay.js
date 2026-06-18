@@ -27,13 +27,47 @@ if (!PROVIDER_KEY) {
 }
 
 console.log("⏳ Connecting to provider via P2P delegation…", PROVIDER_KEY.slice(0, 8) + "…");
-const modelId = await loadModel({
-  modelSrc: LLM_MODEL,
-  modelType: "llm",
-  delegate: { providerPublicKey: PROVIDER_KEY, fallbackToLocal: false },
-});
-const info = await getLoadedModelInfo({ modelId });
+
+let modelId, info;
+
+// (Re)establish the delegated session and refresh the cached info. The model id
+// is deterministic, so re-issuing loadModel re-registers our session with the
+// provider — needed when a long-lived/idle session goes stale (another consumer
+// unloaded the shared model, the connection was GC'd, or the provider recycled).
+async function connectDelegated() {
+  modelId = await loadModel({
+    modelSrc: LLM_MODEL,
+    modelType: "llm",
+    delegate: { providerPublicKey: PROVIDER_KEY, fallbackToLocal: false },
+  });
+  info = await getLoadedModelInfo({ modelId });
+  return info;
+}
+
+await connectDelegated();
 console.log("✅ Delegated model ready. isDelegated:", info.isDelegated);
+
+// Runs one short delegated completion and returns the cleaned answer + stats.
+async function delegatedComplete(prompt) {
+  // /no_think keeps Qwen3 from emitting a long reasoning block -> fast, short answer
+  // (a slow ~12s response stalls the cloudflare/ngrok tunnel in browsers).
+  const run = completion({
+    modelId,
+    history: [
+      { role: "system", content: "/no_think\nResponda de forma curta e direta, em no máximo 12 palavras." },
+      { role: "user", content: prompt },
+    ],
+    stream: true,
+  });
+  let answer = "";
+  for await (const ev of run.events) if (ev.type === "contentDelta") answer += ev.text;
+  const final = await run.final;
+  return { answer: answer.replace(/<think>[\s\S]*?<\/think>/gi, "").trim(), final };
+}
+
+// The provider reports "Model with ID … not found" when our delegated session
+// has gone stale; reconnecting (connectDelegated) re-registers and recovers it.
+const isStaleSession = (e) => /not found|delegated provider error|communicating with provider/i.test(String(e?.message ?? e));
 
 const cors = (res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -51,23 +85,19 @@ const server = createServer(async (req, res) => {
   }
 
   if (url.pathname === "/delegate") {
+    const prompt = url.searchParams.get("q") || "O que é ouro?";
     try {
-      const prompt = url.searchParams.get("q") || "O que é ouro?";
-      // /no_think keeps Qwen3 from emitting a long reasoning block -> fast, short answer
-      // (a slow ~12s response stalls the cloudflare quick tunnel in browsers).
-      const run = completion({
-        modelId,
-        history: [
-          { role: "system", content: "/no_think\nResponda de forma curta e direta, em no máximo 12 palavras." },
-          { role: "user", content: prompt },
-        ],
-        stream: true,
-      });
-      let answer = "";
-      for await (const ev of run.events) if (ev.type === "contentDelta") answer += ev.text;
-      const final = await run.final;
-      answer = answer.replace(/<think>[\s\S]*?<\/think>/gi, "").trim(); // drop Qwen reasoning
-      return json(res, 200, { isDelegated: info.isDelegated, provider: PROVIDER_KEY.slice(0, 16), answer, stats: final.stats });
+      let out;
+      try {
+        out = await delegatedComplete(prompt);
+      } catch (e) {
+        if (!isStaleSession(e)) throw e;
+        // Stale delegated session: re-delegate once and retry.
+        console.log("↻ Delegated session stale, reconnecting…");
+        await connectDelegated();
+        out = await delegatedComplete(prompt);
+      }
+      return json(res, 200, { isDelegated: info.isDelegated, provider: PROVIDER_KEY.slice(0, 16), answer: out.answer, stats: out.final.stats });
     } catch (e) {
       return json(res, 502, { error: String(e?.message ?? e) });
     }
