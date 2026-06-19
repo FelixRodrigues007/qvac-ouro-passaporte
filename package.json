@@ -22,7 +22,8 @@
     "hardware-proof": "bash scripts/hardware-proof.sh"
   },
   "dependencies": {
-    "@qvac/sdk": "latest"
+    "@qvac/sdk": "latest",
+    "pdfjs-dist": "^6.0.227"
   },
   "devDependencies": {
     "playwright": "^1.61.0"

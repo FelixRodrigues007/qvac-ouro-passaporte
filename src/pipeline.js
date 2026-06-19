@@ -2,7 +2,7 @@
  * Pipeline: document photo -> OCR (offline) -> LLM -> verification -> passport.
  * Also records a structured audit log (model load/unload + inference metrics).
  */
-import { extractText } from "./ocr.js";
+import { extractDocument } from "./extract.js";
 import { structureProvenance } from "./structure.js";
 import { verificar } from "./verify.js";
 import { selar } from "./seal.js";
@@ -24,11 +24,12 @@ function sanitizeId(value) {
   return clean || null;
 }
 
-export async function buildPassport(imagePath, options = {}) {
+export async function buildPassport(docPath, options = {}) {
   const audit = createAudit({ device: DEVICE });
 
-  // OCR is always local; only the LLM extraction may be delegated to a peer.
-  const { text, blocks } = await extractText(imagePath, audit);
+  // Text extraction (OCR for images, text layer for PDFs) is always local;
+  // only the LLM extraction may be delegated to a peer.
+  const { text, blocks, source } = await extractDocument(docPath, audit);
   const passport = await structureProvenance(text, audit, options.delegate);
 
   // Average OCR confidence: mean of the blocks with a defined confidence (null if none).
@@ -46,10 +47,11 @@ export async function buildPassport(imagePath, options = {}) {
     alertas: v.alertas,
     checagens: v.checagens,
     gerado_em: new Date().toISOString(),
-    // The seal covers this field, so it must be honest about where the LLM ran.
-    fonte: options.delegate
-      ? "OCR offline (on-device) + LLM delegado a peer via P2P (QVAC)"
-      : "OCR offline + LLM local (QVAC)",
+    // The seal covers this field, so it must be honest about where the text was
+    // read and where the LLM ran.
+    fonte: `${source === "pdf" ? "PDF text layer (offline, on-device)" : "OCR offline (on-device)"} + ${
+      options.delegate ? "LLM delegado a peer via P2P (QVAC)" : "LLM local (QVAC)"
+    }`,
   };
 
   // Seals the passport (SHA-256) only after it is complete, including the verification.

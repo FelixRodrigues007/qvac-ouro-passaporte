@@ -23,9 +23,9 @@ Built for the **QVAC Hackathon I – Unleash edge AI** (DoraHacks), on the [QVAC
 
 ## What it does
 
-A photo of a mining document (ANM license / PLG permit, lab assay, packing list) becomes a structured, verified, cryptographically sealed provenance passport — **entirely on-device, no cloud**:
+A photo **or digital PDF** of a mining document (ANM license / PLG permit, lab assay, packing list) becomes a structured, verified, cryptographically sealed provenance passport — **entirely on-device, no cloud**:
 
-- 🔍 **Offline OCR + local LLM** read and structure the document (QVAC: ONNX OCR + Qwen3 4B) — fully offline.
+- 🔍 **Offline reading + local LLM** — images go through offline OCR; PDFs with a text layer are read directly (no OCR). The local LLM then structures the document (QVAC: ONNX OCR + Qwen3 4B) — fully offline.
 - ✅ **Auditable verification** — explainable rules check validity dates, ANM process number, regime, owner, and **CNPJ check digits**. The AI *reads*; deterministic code *judges*.
 - 🔏 **Tamper-evident SHA-256 seal** — change a single character of the data and the seal breaks. The seal also commits to the verification verdict, so a "valid" stamp can't be moved onto altered data.
 - 🧾 **HTML certificate** — a clean **VALID** state and a red **ADULTERATED** state.
@@ -134,13 +134,15 @@ Demo device: **MacBook Pro · Apple M3 Pro · 36 GB RAM · 512 GB SSD · macOS 2
 ## Project structure
 
 ```
-src/ocr.js          offline OCR (QVAC ONNX)
+src/ocr.js          offline OCR for images (QVAC ONNX)
+src/pdf.js          text-layer extraction for digital PDFs (offline, no OCR)
+src/extract.js      dispatcher: routes images → OCR, PDFs → text layer
 src/structure.js    text → JSON (local LLM, Qwen3 4B)
 src/verify.js       rule-based verification (dates, ANM, CNPJ check digit, OCR confidence)
 src/seal.js         canonical SHA-256 seal + tamper detection
 src/certificate.js  HTML certificate renderer (VALID / ADULTERATED)
 src/audit.js        structured audit log (load/unload + TTFT/tokens-sec)
-src/pipeline.js     photo → OCR → structure → verify → seal → audit
+src/pipeline.js     document → OCR/PDF → structure → verify → seal → audit
 src/index.js        CLI entry point
 web/index.html      public client-side seal verifier (Web Crypto)
 scripts/            smoke test · seal verifier · certificate renderer

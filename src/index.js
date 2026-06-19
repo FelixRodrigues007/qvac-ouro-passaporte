@@ -1,5 +1,6 @@
 /**
  * CLI entry point.
+ * Accepts an image (offline OCR) or a digital PDF with a text layer.
  * Usage: npm run passport -- ./samples/<file> [--delegate <providerPublicKey>]
  */
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -15,18 +16,18 @@ const SELOS = {
   nao_identificado: "⬜ NOT IDENTIFIED",
 };
 
-// Arg parsing: the first argument that does NOT start with "--" is the image path;
+// Arg parsing: the first argument that does NOT start with "--" is the document path;
 // "--delegate <key>" delegates ONLY the LLM extraction to a P2P peer.
 const args = process.argv.slice(2);
-let imagePath = null;
+let docPath = null;
 let delegateKey = null;
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
   if (a === "--delegate") delegateKey = args[++i] ?? null;
-  else if (!a.startsWith("--") && imagePath === null) imagePath = a;
+  else if (!a.startsWith("--") && docPath === null) docPath = a;
 }
-if (!imagePath) {
-  console.error("Usage: node src/index.js <image-path> [--delegate <providerPublicKey>]");
+if (!docPath) {
+  console.error("Usage: node src/index.js <image-or-pdf-path> [--delegate <providerPublicKey>]");
   process.exit(1);
 }
 
@@ -34,8 +35,8 @@ try {
   if (delegateKey) {
     console.log("🛰️  Extraction will be DELEGATED to peer: " + delegateKey.slice(0, 8) + "…");
   }
-  console.log("📷 Reading document (offline):", imagePath);
-  const { rawText, passport, id } = await buildPassport(imagePath, { delegate: delegateKey || null });
+  console.log("📄 Reading document (offline):", docPath);
+  const { rawText, passport, id } = await buildPassport(docPath, { delegate: delegateKey || null });
 
   console.log("\n--- Raw text (OCR) ---\n" + rawText);
   console.log("\n--- Provenance passport ---");
