@@ -25,7 +25,7 @@ Built for the **QVAC Hackathon I – Unleash edge AI** (DoraHacks), on the [QVAC
 
 A photo **or digital PDF** of a mining document (ANM license / PLG permit, lab assay, packing list) becomes a structured, verified, cryptographically sealed provenance passport — **entirely on-device, no cloud**:
 
-- 🔍 **Offline reading + local LLM** — images go through offline OCR; PDFs with a text layer are read directly (no OCR). The local LLM then structures the document (QVAC: ONNX OCR + Qwen3 4B) — fully offline.
+- 🔍 **Offline reading + local LLM** — images go through offline OCR; digital PDFs with a text layer are read directly (no OCR). Scanned / image-only PDFs (no text layer) are rejected by design. The local LLM then structures the document (QVAC: ONNX OCR + Qwen3 4B) — fully offline.
 - ✅ **Auditable verification** — explainable rules check validity dates, ANM process number, regime, owner, and **CNPJ check digits**. The AI *reads*; deterministic code *judges*.
 - 🔏 **Tamper-evident SHA-256 seal** — change a single character of the data and the seal breaks. The seal also commits to the verification verdict, so a "valid" stamp can't be moved onto altered data.
 - 🧾 **HTML certificate** — a clean **VALID** state and a red **ADULTERATED** state.
