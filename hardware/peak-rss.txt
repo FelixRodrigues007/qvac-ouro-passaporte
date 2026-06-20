@@ -1,0 +1,12 @@
+AuPass — RAM peak evidence (offline run)
+
+date:     Sat Jun 20 13:35:16 -03 2026
+machine:  MacBook Pro · Apple M3 Pro · 36 GB RAM · macOS 26.5 (see ../hardware-proof.txt)
+command:  npm run passport -- ./samples/laudo-ouro-EXEMPLO.png
+measured: /usr/bin/time -l on the node process (maximum resident set size)
+
+peak RSS: 3996123136 bytes = 3811 MB (~3.72 GB)
+
+note: the full on-device pipeline (offline OCR + local Qwen3 4B LLM + verify + seal)
+peaks at ~3.8 GB resident — well below 32 GB. The tool runs comfortably on
+consumer hardware; no cloud and no high-memory machine required.
