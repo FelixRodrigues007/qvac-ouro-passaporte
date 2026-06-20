@@ -70,7 +70,8 @@ npm install
 npm run smoke
 
 # Generate a provenance passport from a document → out/<lot>.passport.json + out/<lot>.audit.json
-npm run passport -- ./samples/laudo-ouro-EXEMPLO.png
+npm run passport -- ./samples/laudo-ouro-EXEMPLO.png   # image (offline OCR)
+npm run passport -- ./samples/laudo-ouro-EXEMPLO.pdf   # digital PDF (text layer, no OCR)
 
 # Render the HTML certificate from a passport → out/<lot>.passport.html
 node scripts/certificate.js out/<lot>.passport.json

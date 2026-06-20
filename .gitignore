@@ -10,6 +10,7 @@ samples/*
 # ...except the fictional demo samples (watermarked "DOCUMENTO FICTÍCIO")
 !samples/laudo-ouro-EXEMPLO.png
 !samples/laudo-ouro-EXEMPLO.invalido.png
+!samples/laudo-ouro-EXEMPLO.pdf
 
 # real AuPass documents (sensitive: CPF/CNPJ, coordinates) — DO NOT version
 documentos-reais/*
